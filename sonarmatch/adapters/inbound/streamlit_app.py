@@ -129,11 +129,7 @@ def ejecutar_app(servicios: Servicios | None = None) -> None:
         servicios_activos = obtener_servicios()
     except FileNotFoundError as exc:
         st.title("SonarMatch")
-        st.error(
-            f"No se encontró la base de datos local ({exc}). "
-            "Para inicializar el catálogo, ejecuta primero la ingesta con:\n\n"
-            "`python -m sonarmatch.adapters.inbound.cli ingest`"
-        )
+        st.error(str(exc))
         return
     except Exception:
         logger.exception("Error inesperado al inicializar los servicios.")

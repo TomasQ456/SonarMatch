@@ -390,12 +390,28 @@ def test_manejo_error_generico_sin_exponer_traceback(caplog: LogCaptureFixture) 
 def test_mensaje_claro_cuando_falta_base_de_datos(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
     streamlit_app._cargar_servicios_cacheados.clear()
     monkeypatch.delenv("SONARMATCH_FAKE", raising=False)
-    monkeypatch.setenv("SONARMATCH_DB", str(tmp_path / "inexistente.db"))
+    ruta_inexistente = tmp_path / "inexistente.db"
+    monkeypatch.setenv("SONARMATCH_DB", str(ruta_inexistente))
 
     at = AppTest.from_string(SCRIPT_EJECUTAR_APP, default_timeout=10).run()
     assert not at.exception
     assert len(at.error) == 1
+    assert f"No existe la base {ruta_inexistente}." in at.error[0].value
     assert "python -m sonarmatch.adapters.inbound.cli ingest" in at.error[0].value
+    assert "--fixture" in at.error[0].value
+    assert "No se encontró la base de datos local" not in at.error[0].value
+
+    # También cuando el archivo existe pero la base está vacía
+    streamlit_app._cargar_servicios_cacheados.clear()
+    ruta_vacia = tmp_path / "vacia.db"
+    ruta_vacia.touch()
+    monkeypatch.setenv("SONARMATCH_DB", str(ruta_vacia))
+
+    at_vacia = AppTest.from_string(SCRIPT_EJECUTAR_APP, default_timeout=10).run()
+    assert not at_vacia.exception
+    assert len(at_vacia.error) == 1
+    assert f"La base {ruta_vacia} no tiene artistas." in at_vacia.error[0].value
+    assert "--fixture" in at_vacia.error[0].value
 
 
 def test_obtener_servicios_modo_fake_y_error_generico_inicio(
