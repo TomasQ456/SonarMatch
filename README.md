@@ -369,7 +369,53 @@ sintético de 5.000 nodos verifica los límites de 3 s y 1,5 s.
 
 ## Interfaz
 
-<!-- sección pendiente -->
+La interfaz web está construida en Streamlit (`sonarmatch/adapters/inbound/streamlit_app.py` y
+`sonarmatch/adapters/inbound/ui/`) y se comunica exclusivamente con los puertos de entrada del
+contrato (`ports/inbound.py`, `bootstrap.py` y `testing/fakes.py`).
+
+### Ejecución
+
+```bash
+# 1. Con el motor real (requiere inicializar antes la base SQLite)
+# Sin API key de Last.fm, crea primero el catálogo sintético de demostración (51 artistas):
+python -m sonarmatch.adapters.inbound.cli ingest --fixture
+streamlit run sonarmatch/adapters/inbound/streamlit_app.py
+
+# 2. Con los servicios falsos del contrato (sin base de datos)
+SONARMATCH_FAKE=1 streamlit run sonarmatch/adapters/inbound/streamlit_app.py
+```
+
+Si la base configurada en `SONARMATCH_DB` (por defecto `data/sonarmatch.db`) no existe o está
+vacía, la interfaz muestra en pantalla la instrucción de ingesta correspondiente.
+
+### Qué muestra cada parte
+
+- **Barra lateral ("Modo exploración"):** controles deslizantes para ajustar en vivo los pesos `a`
+  (Etiquetas), `b` (Conexiones en grafo), `c` (Novedad), `d` (Afinidad de género) y `λ`
+  (Diversidad MMR), más el botón *"Restablecer valores"*. Si se mantienen los valores por defecto,
+  se envía `parametros=None` para que el motor utilice los pesos calibrados y los ajustes de las
+  reglas R3, R4 y R6.
+- **Entrada ("Tu perfil musical"):** selector múltiple con búsqueda sobre el catálogo, contador de
+  selección (`n de 5–20`), un control deslizante de peso (`1,0` a `5,0`) por cada artista elegido y
+  el botón *"Recomendar"*, que solo se habilita cuando hay entre 5 y 20 artistas.
+- **Encabezado de resultados:** latencia de la consulta en milisegundos, conteo de recomendaciones
+  por estrategia (`Grafo (Principal)`, `Contenido (Respaldo)`, `Popularidad (Respaldo)`), nota
+  sobre el ordenamiento conjunto de puntaje y diversidad (MMR) y aviso cuando algún artista de
+  entrada no se encontró en el catálogo.
+- **Tarjetas de recomendación (10 artistas):** posición, nombre, puntaje, insignia (`Principal` o
+  `Respaldo`), número de oyentes formateado (`mil` / `M`), gráfica horizontal apilada en Altair con
+  los cuatro aportes (`Etiquetas`, `Conexiones`, `Novedad`, `Afinidad de género`), explicación en
+  español, etiquetas clave, artistas origen y botones de feedback (`👍` / `👎`) que registran la
+  valoración una vez por tarjeta y sesión. Cada tarjeta incluye el desplegable **"¿Por qué?"** con
+  la cadena de inferencia numerada y el botón *"¿Qué pasaría sin cada uno de mis artistas?"*, que
+  calcula bajo demanda y cachea el resumen y la tabla contrafactual.
+- **Sección "¿Por qué no recomendaste…?":** permite elegir cualquier artista del catálogo ausente
+  del top 10 y consultar el motivo exacto (`ya_en_entrada`, `no_en_catalogo`, `no_conectado`,
+  `descartado_por_regla`, `puntaje_insuficiente` o `desplazado_por_diversidad`), junto con su
+  explicación, la traza de R5 o el artista similar que lo desplazó cuando corresponde, y una
+  gráfica comparativa de aportes frente al 10.° recomendado.
+
+<!-- captura pendiente: docs/img/interfaz.png (se toma a mano) -->
 
 ## Equipo
 
