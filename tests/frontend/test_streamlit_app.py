@@ -129,6 +129,7 @@ def test_flujo_completo_recomendacion_y_persistencia_estado(monkeypatch: MonkeyP
 
     assert "412 mil" in textos_cap
     assert "2,1 M" in textos_cap
+    assert "El orden combina puntaje y diversidad (MMR)" in textos_cap
 
     # Mover un slider sin presionar Recomendar no recalcula ni pierde resultados
     at.slider(key="param_a").set_value(0.6).run()

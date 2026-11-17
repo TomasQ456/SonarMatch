@@ -172,6 +172,10 @@ def dibujar_encabezado_resultados(respuesta: RespuestaRecomendacion) -> None:
     latencia_txt = formatear_latencia(respuesta.latencia_ms)
     estrategias_txt = formatear_resumen_estrategias(respuesta.estrategias_usadas)
     st.markdown(f"**Latencia:** {latencia_txt} · **Estrategias:** {estrategias_txt}")
+    st.caption(
+        "El orden combina puntaje y diversidad (MMR), por lo que los puntajes mostrados "
+        "no siempre decrecen."
+    )
 
     if respuesta.artistas_no_encontrados:
         nombres = ", ".join(respuesta.artistas_no_encontrados)
