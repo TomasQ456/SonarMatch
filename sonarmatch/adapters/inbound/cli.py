@@ -15,6 +15,7 @@ from pathlib import Path
 
 from sonarmatch.adapters.outbound.sqlite_repository import RepositorioSQLite, guardar_catalogo
 from sonarmatch.bootstrap import crear_servicios
+from sonarmatch.evaluation.protocol import evaluar_desde_cli
 from sonarmatch.ingestion.fixture import RUTA_FIXTURE, catalogo_desde_json
 from sonarmatch.ingestion.pipeline import ingerir_desde_entorno
 from sonarmatch.ports.inbound import EntradaArtista, ErrorEntradaInvalida, SolicitudRecomendacion
@@ -64,6 +65,20 @@ def cmd_recommend(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_evaluate(args: argparse.Namespace) -> int:
+    ruta = Path(args.ruta or ("data/hetrec2011-lastfm-2k" if args.dataset == "hetrec" else ""))
+    return evaluar_desde_cli(
+        Path(args.db),
+        args.dataset,
+        ruta,
+        salida=Path(args.salida),
+        semilla=args.semilla,
+        paso=args.paso,
+        guardar=not args.sin_guardar_parametros,
+        max_validacion=args.max_validacion,
+    )
+
+
 def construir_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="sonarmatch", description=__doc__)
     sub = parser.add_subparsers(dest="comando", required=True)
@@ -80,6 +95,21 @@ def construir_parser() -> argparse.ArgumentParser:
     p_rec.add_argument("artistas", nargs="+", help='"Artista:peso" (peso 1..5)')
     p_rec.add_argument("--db", default=db)
     p_rec.set_defaults(func=cmd_recommend)
+
+    p_ev = sub.add_parser("evaluate", help="evaluación offline y calibración")
+    p_ev.add_argument("--db", default=db)
+    p_ev.add_argument("--dataset", choices=["hetrec", "csv"], default="hetrec")
+    p_ev.add_argument("--ruta", help="carpeta de HetRec o archivo CSV user_id,artist_name,peso")
+    p_ev.add_argument("--salida", default="reports")
+    p_ev.add_argument("--semilla", type=int, default=42)
+    p_ev.add_argument("--paso", type=float, default=0.1, help="paso del símplex de a, b, c, d")
+    p_ev.add_argument(
+        "--max-validacion", type=int, help="usa solo N usuarios de validación en el grid"
+    )
+    p_ev.add_argument(
+        "--sin-guardar-parametros", action="store_true", help="no escribe parametros_calibrados"
+    )
+    p_ev.set_defaults(func=cmd_evaluate)
 
     return parser
 
