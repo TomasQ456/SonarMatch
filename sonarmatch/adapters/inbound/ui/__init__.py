@@ -1,1 +1,1 @@
-"""Componentes de la interfaz Streamlit."""
+"""Componentes y presentadores de la interfaz Streamlit de SonarMatch."""
