@@ -16,6 +16,7 @@ from pathlib import Path
 from sonarmatch.adapters.outbound.sqlite_repository import RepositorioSQLite, guardar_catalogo
 from sonarmatch.bootstrap import crear_servicios
 from sonarmatch.ingestion.fixture import RUTA_FIXTURE, catalogo_desde_json
+from sonarmatch.ingestion.pipeline import ingerir_desde_entorno
 from sonarmatch.ports.inbound import EntradaArtista, ErrorEntradaInvalida, SolicitudRecomendacion
 
 DB_POR_DEFECTO = "data/sonarmatch.db"
@@ -31,8 +32,7 @@ def cmd_ingest(args: argparse.Namespace) -> int:
         guardar_catalogo(RepositorioSQLite(ruta), catalogo_desde_json(RUTA_FIXTURE))
         print(f"Catálogo de demostración cargado en {ruta}")
         return 0
-    print("La ingesta desde Last.fm se implementa en la fase 7; usa --fixture.", file=sys.stderr)
-    return 2
+    return ingerir_desde_entorno(ruta, objetivo=args.objetivo, musicbrainz=not args.sin_musicbrainz)
 
 
 def _parsear_entrada(texto: str) -> EntradaArtista:
@@ -73,6 +73,7 @@ def construir_parser() -> argparse.ArgumentParser:
     p_ing.add_argument("--db", default=db)
     p_ing.add_argument("--fixture", action="store_true", help="carga el catálogo sintético")
     p_ing.add_argument("--objetivo", type=int, default=5000, help="artistas a alcanzar")
+    p_ing.add_argument("--sin-musicbrainz", action="store_true", help="omite país y año")
     p_ing.set_defaults(func=cmd_ingest)
 
     p_rec = sub.add_parser("recommend", help="recomienda desde la terminal")
