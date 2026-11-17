@@ -189,6 +189,13 @@ def test_registro_feedback_y_deshabilitado_tras_votar() -> None:
     assert at.button(key="voto_neg_1000").disabled is True
     assert any("valoración fue registrada" in s.value for s in at.success)
 
+    # Forzar segundo clic en la misma tarjeta (👎 tras 👍) no vuelve a registrar
+    btn_neg_1000 = at.button(key="voto_neg_1000")
+    btn_neg_1000.proto.disabled = False
+    btn_neg_1000.click().run()
+    assert not at.exception
+    assert len(feedback.registros) == 1
+
     # Voto negativo en otra tarjeta (respaldo popularidad: id 1008)
     at.button(key="voto_neg_1008").click().run()
     assert len(feedback.registros) == 2
@@ -198,6 +205,22 @@ def test_registro_feedback_y_deshabilitado_tras_votar() -> None:
 
     # Votar no recalcula las recomendaciones
     assert len(recomendador.llamadas) == 1
+
+
+def test_voto_doble_en_misma_tarjeta_no_registra_segundo_voto() -> None:
+    at, serv = _recomendar_base(5)
+    feedback = serv.feedback
+    assert isinstance(feedback, FeedbackFalso)
+
+    at.button(key="voto_pos_1000").click().run()
+    assert len(feedback.registros) == 1
+
+    btn_neg = at.button(key="voto_neg_1000")
+    btn_neg.proto.disabled = False
+    btn_neg.click().run()
+    assert not at.exception
+    assert len(feedback.registros) == 1
+    assert feedback.registros[0][1:] == (1000, 1, "grafo")
 
 
 def test_aviso_artistas_no_encontrados() -> None:
