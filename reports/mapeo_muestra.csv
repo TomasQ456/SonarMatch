@@ -1,0 +1,40 @@
+etiqueta,genero_id,genero,confianza,correcto
+african,Q369820,music of Africa,0.93,sí
+alternativo,Q1695023,alternative music,0.91,sí
+avantgarde,Q2332751,avant-garde music,0.95,sí
+ballads,Q116690343,ballad,0.92,sí
+britrock,Q2566660,British rock,0.94,sí
+cantautori,Q111540535,cantautor music,0.95,sí
+chanson francaise,Q1062400,chanson,0.94,sí
+contemporary rnb,Q850412,contemporary R&B,0.94,sí
+drinking songs,Q2165184,drinking song,0.96,sí
+electro minimalist,Q181999,minimal electro,0.91,sí
+electrolash,Q861823,electroclash,0.96,sí
+eletronic,Q9778,electronic music,0.95,sí
+eletronica,Q817138,electronica,0.95,sí
+eletropop,Q188450,electropop,0.95,sí
+etno-pop,Q64055364,ethnic pop,0.94,sí
+euro-pop,Q517415,Europop,0.93,sí
+german hiphop,Q454071,German hip-hop,0.96,sí
+hiphop,Q11401,hip-hop,0.92,sí
+horrorpunk,Q830325,horror punk,0.95,sí
+ilahi,Q2607222,İlahi,0.91,sí
+indierock,Q183504,indie rock,0.95,sí
+instrumentals,Q639197,instrumental music,0.96,sí
+maghrebi,Q116973456,Maghreb music,0.93,sí
+modern-classic,Q65937946,modern classical music,0.93,sí
+musica russa,Q2498201,music of Russia,0.96,sí
+new romantics,Q597240,New Romantic,0.96,sí
+outsiders,Q2416307,outsider music,0.94,sí
+poppunk,Q487914,pop-punk,0.93,sí
+poprock,Q484641,pop rock,0.93,sí
+post modern,Q2568406,postmodern music,0.95,sí
+power ballads,Q116690325,power ballad,0.96,sí
+ramonescore,Q11890008,ramopunk,0.96,sí
+riot grrl,Q677542,riot grrrl,0.95,sí
+rock alternative,Q11366,alternative rock,0.94,sí
+rock en espanol,Q2994332,rock en español,0.93,sí
+rock'n'roll,Q7749,rock and roll,0.92,sí
+traditional,Q235858,traditional folk music,0.91,sí
+work out music,Q109656646,sports music,0.96,sí
+worldmusic,Q205049,world music,0.95,sí

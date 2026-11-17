@@ -109,7 +109,7 @@ def test_contrafactual_ordena_por_impacto() -> None:
 def test_feedback_y_catalogo() -> None:
     s = crear_servicios_falsos()
     s.feedback.registrar("sesion", 1000, 1, "grafo")
-    assert s.feedback.registros == [("sesion", 1000, 1, "grafo")]  # type: ignore[attr-defined]  # atributo propio del doble
+    assert s.feedback.registros == [("sesion", 1000, 1, "grafo")]
     assert s.catalogo.nombres_artistas() == sorted(CATALOGO_FALSO)
     p = s.catalogo.parametros_por_defecto()
     assert p.a + p.b + p.c + p.d == pytest.approx(1)

@@ -1,13 +1,24 @@
 """Raíz de composición: conecta los adaptadores de salida con los servicios de aplicación."""
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 
+from sonarmatch.adapters.outbound.sqlite_repository import RepositorioSQLite
+from sonarmatch.application.recommend_service import ServicioRecomendacion
+from sonarmatch.config import RUTA_CALIBRADOS, ConfigMotor
+from sonarmatch.domain.indice import IndiceCatalogo
+from sonarmatch.domain.pipeline import MotorRecomendacion
 from sonarmatch.ports.inbound import (
     ConsultarCatalogo,
     ExplicarRecomendacion,
     RecomendarArtistas,
     RegistrarFeedback,
+)
+
+MENSAJE_INGESTA = (
+    "Ejecuta la ingesta: python -m sonarmatch.adapters.inbound.cli ingest "
+    "(o, sin API key, con --fixture para cargar el catálogo de demostración)."
 )
 
 
@@ -21,14 +32,22 @@ class Servicios:
     feedback: RegistrarFeedback
 
 
-def crear_servicios(db_path: str) -> Servicios:
+def crear_servicios(db_path: str, config_path: str | None = None) -> Servicios:
     """Carga el catálogo desde SQLite y construye en memoria todas las estructuras (una vez).
 
-    Lanza FileNotFoundError si la base no existe.
+    Los hiperparámetros salen de ``config_path``, de SONARMATCH_PARAMS o de
+    reports/parametros_calibrados.json, en ese orden; si no existen, de config.py.
+    Lanza FileNotFoundError si la base no existe o está vacía.
     """
     if not Path(db_path).exists():
-        raise FileNotFoundError(
-            f"No existe la base {db_path}. Ejecuta la ingesta: "
-            "python -m sonarmatch.adapters.inbound.cli ingest"
-        )
-    raise NotImplementedError("El backend real se conecta en la fase 6.")
+        raise FileNotFoundError(f"No existe la base {db_path}. {MENSAJE_INGESTA}")
+    repo = RepositorioSQLite(db_path)
+    repo.crear_esquema()
+    if repo.contar_artistas() == 0:
+        raise FileNotFoundError(f"La base {db_path} no tiene artistas. {MENSAJE_INGESTA}")
+    ruta = Path(config_path or os.environ.get("SONARMATCH_PARAMS") or RUTA_CALIBRADOS)
+    motor = MotorRecomendacion(
+        IndiceCatalogo.construir(repo.cargar_catalogo()), ConfigMotor.desde_json(ruta)
+    )
+    servicio = ServicioRecomendacion(motor, repo)
+    return Servicios(recomendar=servicio, catalogo=servicio, explicar=servicio, feedback=servicio)
