@@ -130,7 +130,7 @@ def validar_cantidad_artistas(n: int) -> bool:
 
 def texto_contador_artistas(n: int) -> str:
     """Genera el texto del contador de artistas seleccionados (ej. '3 de 5-20')."""
-    return f"{n} de {MIN_ARTISTAS}–{MAX_ARTISTAS}"  # noqa: RUF001 — guion de rango exigido por la especificación
+    return f"{n} de {MIN_ARTISTAS}–{MAX_ARTISTAS}"
 
 
 def construir_solicitud(

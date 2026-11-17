@@ -61,7 +61,7 @@ def test_carga_inicial_sin_errores() -> None:
     at, _ = _crear_apptest()
     assert not at.exception
     assert any("SonarMatch" in t.value for t in at.title)
-    assert any("0 de 5–20" in m.value for m in at.markdown)  # noqa: RUF001 — guion de rango según especificación
+    assert any("0 de 5–20" in m.value for m in at.markdown)
     assert at.button(key="btn_recomendar").disabled is True
 
     assert at.slider(key="param_a").value == pytest.approx(PARAMETROS_FALSOS.a)
@@ -87,7 +87,7 @@ def test_boton_recomendar_segun_rango_de_artistas(cantidad: int, debe_deshabilit
     seleccion = list(ENTRADA_FALSA[:cantidad])
     at.multiselect(key="artistas_seleccionados").set_value(seleccion).run()
     assert not at.exception
-    assert any(f"{cantidad} de 5–20" in m.value for m in at.markdown)  # noqa: RUF001 — guion de rango según especificación
+    assert any(f"{cantidad} de 5–20" in m.value for m in at.markdown)
     assert at.button(key="btn_recomendar").disabled is debe_deshabilitar
 
 

@@ -85,9 +85,9 @@ def test_validar_cantidad_artistas() -> None:
 
 
 def test_texto_contador_artistas() -> None:
-    assert texto_contador_artistas(3) == "3 de 5–20"  # noqa: RUF001 — guion de rango según especificación
-    assert texto_contador_artistas(5) == "5 de 5–20"  # noqa: RUF001 — guion de rango según especificación
-    assert texto_contador_artistas(20) == "20 de 5–20"  # noqa: RUF001 — guion de rango según especificación
+    assert texto_contador_artistas(3) == "3 de 5–20"
+    assert texto_contador_artistas(5) == "5 de 5–20"
+    assert texto_contador_artistas(20) == "20 de 5–20"
 
 
 def test_construir_solicitud() -> None:
