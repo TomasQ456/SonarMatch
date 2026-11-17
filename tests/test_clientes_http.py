@@ -228,6 +228,11 @@ def test_wikidata_generos_y_aristas(reloj: Reloj) -> None:
                     },
                     {"g": {"value": pre + "Q11399"}, "en": {"value": "rock music"}},
                     {"g": {"value": pre + "Q1"}},
+                    {
+                        "g": {"value": pre + "Q3071"},
+                        "mul": {"value": "punk rock"},
+                        "aliases": {"value": "punk"},
+                    },
                 ]
             }
         },
@@ -250,6 +255,7 @@ def test_wikidata_generos_y_aristas(reloj: Reloj) -> None:
     assert [(g.id, g.etiqueta_en, g.etiqueta_es, g.alias) for g in generos] == [
         ("Q1", "", "", ()),
         ("Q11399", "rock music", "rock", ("rock", "rock and roll")),
+        ("Q3071", "punk rock", "", ("punk",)),  # sin etiqueta en inglés: se usa "mul"
     ]
     assert c.aristas_subclase() == [("Q2", "Q11399")]
     assert "sparql-results+json" in responses.calls[0].request.headers["Accept"]
@@ -258,3 +264,16 @@ def test_wikidata_generos_y_aristas(reloj: Reloj) -> None:
 def test_wikidata_respuesta_malformada() -> None:
     assert wikidata_client._filas("x") == []
     assert wikidata_client._filas({"results": {"bindings": "x"}}) == []
+
+
+@responses.activate
+def test_wikidata_cache_se_invalida_si_cambia_la_consulta(
+    reloj: Reloj, repo: RepositorioSQLite
+) -> None:
+    responses.get(wikidata_client.URL, json={"results": {"bindings": []}})
+    c = ClienteWikidata(http(reloj), repo)
+    c._consultar("generos", "SELECT 1")
+    c._consultar("generos", "SELECT 1")
+    assert len(responses.calls) == 1
+    c._consultar("generos", "SELECT 2")
+    assert len(responses.calls) == 2

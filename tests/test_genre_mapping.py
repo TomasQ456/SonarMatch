@@ -95,3 +95,23 @@ def test_muestra_difusos_determinista() -> None:
     assert all(f["genero"] == "shoegaze" for f in a)
     assert "exacta" not in {f["etiqueta"] for f in a}
     assert len(muestra_difusos(mapeos[:3], GENEROS)) == 3
+
+
+def test_alias_derivado_del_sufijo_music_y_prefijo_musica() -> None:
+    generos = (Genero("Q9730", "classical music", "música clásica"), Genero("Q1", "music", ""))
+    mapeos = _por_etiqueta(mapear_etiquetas(["classical", "clásica", "Classical Music"], generos))
+    assert mapeos == {
+        "classical": ("Q9730", "alias"),
+        "clásica": ("Q9730", "alias"),
+        "Classical Music": ("Q9730", "exacto"),
+    }
+
+
+def test_manual_vacio_o_guion_bloquea_el_mapeo_automatico(tmp_path: Path) -> None:
+    ruta = tmp_path / "manual.csv"
+    ruta.write_text("tag,qid,comentario\nshoegazer,-,difuso incorrecto\npost rock,,no\n")
+    manual = leer_mapeo_manual(ruta)
+    assert mapear_etiquetas(["shoegazer"], GENEROS)  # sin bloqueo hay difuso
+    assert mapear_etiquetas(["shoegazer", "post-rock", "dream pop"], GENEROS, manual) == [
+        MapeoEtiqueta("dream pop", "Q2", "exacto", 1.0)
+    ]

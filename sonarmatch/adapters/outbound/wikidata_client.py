@@ -8,8 +8,13 @@ descargan en una sola consulta las aristas P279 directas entre géneros (≈8.00
 cierre de ancestros se calcula localmente. A la base solo pasan los géneros alcanzables desde
 etiquetas mapeadas y sus ancestros. Se pierden los caminos que pasan por clases que no son
 géneros (p. ej. "popular music" si no fuese instancia de género).
+
+Formato verificado: algunos géneros ya no tienen etiqueta en inglés sino solo la etiqueta por
+defecto ``mul`` (p. ej. Q3071, "punk rock"); se usa ``mul`` cuando falta ``en`` y sus alias
+también se incluyen.
 """
 
+import hashlib
 from dataclasses import dataclass
 
 from sonarmatch.adapters.outbound.http_base import Cache, ClienteHTTP, con_cache
@@ -20,12 +25,13 @@ PREFIJO = "http://www.wikidata.org/entity/"
 GENERO_MUSICAL = "Q188451"
 
 CONSULTA_GENEROS = f"""
-SELECT ?g ?en ?es (GROUP_CONCAT(DISTINCT ?alias; separator="|") AS ?aliases) WHERE {{
+SELECT ?g ?en ?es ?mul (GROUP_CONCAT(DISTINCT ?alias; separator="|") AS ?aliases) WHERE {{
   ?g wdt:P31 wd:{GENERO_MUSICAL} .
   OPTIONAL {{ ?g rdfs:label ?en FILTER(LANG(?en) = "en") }}
   OPTIONAL {{ ?g rdfs:label ?es FILTER(LANG(?es) = "es") }}
-  OPTIONAL {{ ?g skos:altLabel ?alias FILTER(LANG(?alias) IN ("en", "es")) }}
-}} GROUP BY ?g ?en ?es
+  OPTIONAL {{ ?g rdfs:label ?mul FILTER(LANG(?mul) = "mul") }}
+  OPTIONAL {{ ?g skos:altLabel ?alias FILTER(LANG(?alias) IN ("en", "es", "mul")) }}
+}} GROUP BY ?g ?en ?es ?mul
 """
 
 CONSULTA_ARISTAS = f"""
@@ -59,9 +65,10 @@ class ClienteWikidata:
     cache: Cache | None = None
 
     def _consultar(self, nombre: str, consulta: str) -> list[dict[str, str]]:
+        """La clave de caché incluye un hash de la consulta: si la consulta cambia, se rehace."""
         datos = con_cache(
             self.cache,
-            f"wikidata:{nombre}",
+            f"wikidata:{nombre}:{hashlib.sha256(consulta.encode()).hexdigest()[:16]}",
             lambda: self.http.get_json(
                 URL, {"query": consulta}, cabeceras={"Accept": "application/sparql-results+json"}
             ),
@@ -76,7 +83,8 @@ class ClienteWikidata:
             if not qid or qid in por_qid:
                 continue
             alias = tuple(sorted({a for a in f.get("aliases", "").split("|") if a}))
-            por_qid[qid] = Genero(qid, f.get("en", ""), f.get("es", ""), alias)
+            en = f.get("en") or f.get("mul", "")
+            por_qid[qid] = Genero(qid, en, f.get("es", ""), alias)
         return [por_qid[q] for q in sorted(por_qid)]
 
     def aristas_subclase(self) -> list[tuple[str, str]]:

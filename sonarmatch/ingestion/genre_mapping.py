@@ -4,6 +4,13 @@ Prioridad: 1) archivo manual (data/mapeo_manual.csv), 2) coincidencia exacta con
 en inglés o español, 3) coincidencia con un alias, 4) coincidencia difusa con rapidfuzz
 (umbral configurable, 90 por defecto). Cada mapeo guarda método y confianza.
 Las etiquetas sin mapeo se siguen usando en TF-IDF.
+
+Decisiones (verificadas con etiquetas reales de HetRec, ver reports/mapeo_resumen.md):
+- Wikidata nombra muchos géneros con el sufijo "music" ("classical music", "ambient music")
+  y Last.fm sin él ("classical"); se añade como alias la etiqueta en inglés sin " music" y la
+  española sin el prefijo "música ".
+- En el archivo manual, un qid vacío o "-" significa "no mapear": bloquea un mapeo
+  automático incorrecto (p. ej. un difuso como "canada" → "cantata").
 """
 
 import csv
@@ -18,6 +25,9 @@ from sonarmatch.domain.models import Artista, Genero, MapeoEtiqueta
 
 CONFIANZA = {"manual": 1.0, "exacto": 1.0, "alias": 0.95}
 _SEPARADORES = re.compile(r"[\s\-_/]+")
+NO_MAPEAR = frozenset({"", "-"})
+SUFIJO_EN = " music"
+PREFIJO_ES = "música "
 
 
 def clave(texto: str) -> str:
@@ -26,7 +36,9 @@ def clave(texto: str) -> str:
 
 
 def leer_mapeo_manual(ruta: Path) -> dict[str, str]:
-    """CSV con columnas tag,qid[,comentario]. Devuelve {etiqueta normalizada: qid}."""
+    """CSV con columnas tag,qid[,comentario]. Devuelve {etiqueta normalizada: qid}.
+
+    Un qid vacío o "-" bloquea el mapeo automático de esa etiqueta."""
     if not ruta.exists():
         return {}
     with ruta.open(encoding="utf-8", newline="") as f:
@@ -42,8 +54,14 @@ def _indices(generos: Sequence[Genero]) -> tuple[dict[str, str], dict[str, str]]
         for etiqueta in (g.etiqueta_en, g.etiqueta_es):
             if etiqueta:
                 exactos.setdefault(clave(etiqueta), g.id)
-        for a in g.alias:
-            alias.setdefault(clave(a), g.id)
+        derivados = []
+        if clave(g.etiqueta_en).endswith(SUFIJO_EN):
+            derivados.append(clave(g.etiqueta_en).removesuffix(SUFIJO_EN))
+        if clave(g.etiqueta_es).startswith(PREFIJO_ES):
+            derivados.append(clave(g.etiqueta_es).removeprefix(PREFIJO_ES))
+        for a in (*g.alias, *derivados):
+            if clave(a):
+                alias.setdefault(clave(a), g.id)
     return exactos, alias
 
 
@@ -61,6 +79,8 @@ def mapear_etiquetas(
     salida: list[MapeoEtiqueta] = []
     for etiqueta in sorted(set(etiquetas)):
         k = clave(etiqueta)
+        if manual.get(k, "x").strip() in NO_MAPEAR:
+            continue
         if k in manual and manual[k] in ids:
             salida.append(MapeoEtiqueta(etiqueta, manual[k], "manual", CONFIANZA["manual"]))
         elif k in exactos:
