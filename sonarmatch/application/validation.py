@@ -1,6 +1,9 @@
 """Validación de solicitudes según el contrato (compartida por el servicio real y los falsos)."""
 
+from sonarmatch.domain.textos import normalizar_nombre
 from sonarmatch.ports.inbound import ErrorEntradaInvalida, SolicitudRecomendacion
+
+__all__ = ["normalizar_nombre", "validar_solicitud"]
 
 MIN_ARTISTAS = 5
 MAX_ARTISTAS = 20
@@ -8,11 +11,6 @@ PESO_MIN = 1.0
 PESO_MAX = 5.0
 PARAM_MIN = 0.0
 PARAM_MAX = 1.0
-
-
-def normalizar_nombre(nombre: str) -> str:
-    """Forma canónica para comparar nombres: minúsculas, sin espacios extra."""
-    return " ".join(nombre.casefold().split())
 
 
 def validar_solicitud(solicitud: SolicitudRecomendacion) -> None:
