@@ -42,23 +42,26 @@ SCRIPT_EJECUTAR_APP = (
 )
 
 
-def _crear_apptest(servicios: Servicios | None = None) -> tuple[AppTest, Servicios]:
+def _crear_apptest(
+    monkeypatch: MonkeyPatch, servicios: Servicios | None = None
+) -> tuple[AppTest, Servicios]:
     serv = servicios or crear_servicios_falsos()
-    at = AppTest.from_string(SCRIPT_EJECUTAR_APP, default_timeout=10)
-    at.session_state["_servicios"] = serv
-    at.run()
+    monkeypatch.setattr(streamlit_app, "obtener_servicios", lambda: serv)
+    at = AppTest.from_string(SCRIPT_EJECUTAR_APP, default_timeout=10).run()
     return at, serv
 
 
-def _recomendar_base(n: int = 6, servicios: Servicios | None = None) -> tuple[AppTest, Servicios]:
-    at, serv = _crear_apptest(servicios)
+def _recomendar_base(
+    monkeypatch: MonkeyPatch, n: int = 6, servicios: Servicios | None = None
+) -> tuple[AppTest, Servicios]:
+    at, serv = _crear_apptest(monkeypatch, servicios)
     at.multiselect(key="artistas_seleccionados").set_value(list(ENTRADA_FALSA[:n])).run()
     at.button(key="btn_recomendar").click().run()
     return at, serv
 
 
-def test_carga_inicial_sin_errores() -> None:
-    at, _ = _crear_apptest()
+def test_carga_inicial_sin_errores(monkeypatch: MonkeyPatch) -> None:
+    at, _ = _crear_apptest(monkeypatch)
     assert not at.exception
     assert any("SonarMatch" in t.value for t in at.title)
     assert any("0 de 5–20" in m.value for m in at.markdown)
@@ -82,8 +85,10 @@ def test_carga_inicial_sin_errores() -> None:
         (21, True),
     ],
 )
-def test_boton_recomendar_segun_rango_de_artistas(cantidad: int, debe_deshabilitar: bool) -> None:
-    at, _ = _crear_apptest()
+def test_boton_recomendar_segun_rango_de_artistas(
+    monkeypatch: MonkeyPatch, cantidad: int, debe_deshabilitar: bool
+) -> None:
+    at, _ = _crear_apptest(monkeypatch)
     seleccion = list(ENTRADA_FALSA[:cantidad])
     at.multiselect(key="artistas_seleccionados").set_value(seleccion).run()
     assert not at.exception
@@ -91,8 +96,8 @@ def test_boton_recomendar_segun_rango_de_artistas(cantidad: int, debe_deshabilit
     assert at.button(key="btn_recomendar").disabled is debe_deshabilitar
 
 
-def test_flujo_completo_recomendacion_y_persistencia_estado() -> None:
-    at, serv = _crear_apptest()
+def test_flujo_completo_recomendacion_y_persistencia_estado(monkeypatch: MonkeyPatch) -> None:
+    at, serv = _crear_apptest(monkeypatch)
     seleccion = list(ENTRADA_FALSA[:6])
     at.multiselect(key="artistas_seleccionados").set_value(seleccion).run()
     at.slider(key=f"peso_{seleccion[0]}").set_value(4.5).run()
@@ -131,8 +136,8 @@ def test_flujo_completo_recomendacion_y_persistencia_estado() -> None:
     assert "Wild Nothing" in "\n".join(m.value for m in at.markdown)
 
 
-def test_parametros_personalizados_slider_d_y_restablecer() -> None:
-    at, serv = _crear_apptest()
+def test_parametros_personalizados_slider_d_y_restablecer(monkeypatch: MonkeyPatch) -> None:
+    at, serv = _crear_apptest(monkeypatch)
     recomendador = serv.recomendar
     assert isinstance(recomendador, RecomendadorFalso)
 
@@ -155,8 +160,8 @@ def test_parametros_personalizados_slider_d_y_restablecer() -> None:
     assert recomendador.llamadas[1].parametros is None
 
 
-def test_cadena_inferencia_visible_en_expander() -> None:
-    at, _ = _recomendar_base(5)
+def test_cadena_inferencia_visible_en_expander(monkeypatch: MonkeyPatch) -> None:
+    at, _ = _recomendar_base(monkeypatch, 5)
     assert len(at.expander) == 10
     textos_md = "\n".join(m.value for m in at.markdown)
     assert "Cadena de inferencia:" in textos_md
@@ -165,8 +170,8 @@ def test_cadena_inferencia_visible_en_expander() -> None:
     assert "3. R3: la mediana de oyentes" in textos_md
 
 
-def test_registro_feedback_y_deshabilitado_tras_votar() -> None:
-    at, serv = _recomendar_base(5)
+def test_registro_feedback_y_deshabilitado_tras_votar(monkeypatch: MonkeyPatch) -> None:
+    at, serv = _recomendar_base(monkeypatch, 5)
     feedback = serv.feedback
     recomendador = serv.recomendar
     assert isinstance(feedback, FeedbackFalso)
@@ -207,8 +212,8 @@ def test_registro_feedback_y_deshabilitado_tras_votar() -> None:
     assert len(recomendador.llamadas) == 1
 
 
-def test_voto_doble_en_misma_tarjeta_no_registra_segundo_voto() -> None:
-    at, serv = _recomendar_base(5)
+def test_voto_doble_en_misma_tarjeta_no_registra_segundo_voto(monkeypatch: MonkeyPatch) -> None:
+    at, serv = _recomendar_base(monkeypatch, 5)
     feedback = serv.feedback
     assert isinstance(feedback, FeedbackFalso)
 
@@ -223,8 +228,8 @@ def test_voto_doble_en_misma_tarjeta_no_registra_segundo_voto() -> None:
     assert feedback.registros[0][1:] == (1000, 1, "grafo")
 
 
-def test_aviso_artistas_no_encontrados() -> None:
-    at, _ = _crear_apptest()
+def test_aviso_artistas_no_encontrados(monkeypatch: MonkeyPatch) -> None:
+    at, _ = _crear_apptest(monkeypatch)
     seleccion = [*ENTRADA_FALSA[:5], "Banda Imaginaria 99"]
     at.multiselect(key="artistas_seleccionados").set_value(seleccion).run()
     at.button(key="btn_recomendar").click().run()
@@ -234,8 +239,8 @@ def test_aviso_artistas_no_encontrados() -> None:
     assert "Banda Imaginaria 99" in at.warning[0].value
 
 
-def test_contrafactual_bajo_demanda_y_cacheado() -> None:
-    at, serv = _recomendar_base(5)
+def test_contrafactual_bajo_demanda_y_cacheado(monkeypatch: MonkeyPatch) -> None:
+    at, serv = _recomendar_base(monkeypatch, 5)
     explicador = serv.explicar
     assert isinstance(explicador, ExplicadorFalso)
 
@@ -260,8 +265,8 @@ def test_contrafactual_bajo_demanda_y_cacheado() -> None:
 
 
 @pytest.mark.parametrize("motivo", get_args(MotivoNo))
-def test_por_que_no_cubre_todos_los_motivos(motivo: str) -> None:
-    at, serv = _recomendar_base(5)
+def test_por_que_no_cubre_todos_los_motivos(monkeypatch: MonkeyPatch, motivo: str) -> None:
+    at, serv = _recomendar_base(monkeypatch, 5)
     explicador = serv.explicar
     assert isinstance(explicador, ExplicadorFalso)
 
@@ -327,7 +332,7 @@ class _FeedbackError:
         raise self.error
 
 
-def test_manejo_error_entrada_invalida() -> None:
+def test_manejo_error_entrada_invalida(monkeypatch: MonkeyPatch) -> None:
     msg = "La solicitud contiene artistas duplicados."
     serv_err = Servicios(
         recomendar=_RecomendadorError(ErrorEntradaInvalida(msg)),
@@ -335,7 +340,7 @@ def test_manejo_error_entrada_invalida() -> None:
         explicar=ExplicadorFalso(),
         feedback=FeedbackFalso(),
     )
-    at, _ = _recomendar_base(5, servicios=serv_err)
+    at, _ = _recomendar_base(monkeypatch, 5, servicios=serv_err)
     assert not at.exception
     assert any(msg in e.value for e in at.error)
 
@@ -346,7 +351,7 @@ def test_manejo_error_entrada_invalida() -> None:
         explicar=_ExplicadorError(ErrorEntradaInvalida("Error validación explicar")),
         feedback=_FeedbackError(ErrorEntradaInvalida("Error validación feedback")),
     )
-    at2, _ = _recomendar_base(5, servicios=serv_parcial)
+    at2, _ = _recomendar_base(monkeypatch, 5, servicios=serv_parcial)
     at2.button(key="voto_pos_1000").click().run()
     assert any("Error validación feedback" in e.value for e in at2.error)
 
@@ -357,7 +362,9 @@ def test_manejo_error_entrada_invalida() -> None:
     assert any("Error validación explicar" in e.value for e in at2.error)
 
 
-def test_manejo_error_generico_sin_exponer_traceback(caplog: LogCaptureFixture) -> None:
+def test_manejo_error_generico_sin_exponer_traceback(
+    monkeypatch: MonkeyPatch, caplog: LogCaptureFixture
+) -> None:
     secreto = "Detalle interno sensible de SQLite"
     serv_err = Servicios(
         recomendar=_RecomendadorError(RuntimeError(secreto)),
@@ -365,7 +372,7 @@ def test_manejo_error_generico_sin_exponer_traceback(caplog: LogCaptureFixture) 
         explicar=ExplicadorFalso(),
         feedback=FeedbackFalso(),
     )
-    at, _ = _recomendar_base(5, servicios=serv_err)
+    at, _ = _recomendar_base(monkeypatch, 5, servicios=serv_err)
     assert not at.exception
     assert len(at.error) == 1
     assert "error inesperado" in at.error[0].value.lower()
@@ -379,7 +386,7 @@ def test_manejo_error_generico_sin_exponer_traceback(caplog: LogCaptureFixture) 
         explicar=_ExplicadorError(RuntimeError(secreto)),
         feedback=_FeedbackError(RuntimeError(secreto)),
     )
-    at2, _ = _recomendar_base(5, servicios=serv_parcial)
+    at2, _ = _recomendar_base(monkeypatch, 5, servicios=serv_parcial)
     at2.button(key="voto_pos_1000").click().run()
     at2.button(key="btn_contrafactual_1000").click().run()
     at2.button(key="btn_por_que_no").click().run()

@@ -117,14 +117,9 @@ def main(servicios: Servicios) -> None:
         dibujar_seccion_por_que_no(catalogo, respuesta, solicitud, servicios.explicar)
 
 
-def ejecutar_app(servicios: Servicios | None = None) -> None:
+def ejecutar_app() -> None:
     """Punto de entrada que resuelve los servicios y maneja la falta de base de datos."""
     st.set_page_config(page_title="SonarMatch", layout="wide")
-    servicios_inyectados = servicios or st.session_state.get("_servicios")
-    if isinstance(servicios_inyectados, Servicios):
-        main(servicios_inyectados)
-        return
-
     try:
         servicios_activos = obtener_servicios()
     except FileNotFoundError as exc:
