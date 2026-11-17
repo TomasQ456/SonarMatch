@@ -180,13 +180,18 @@ def _diag_candidato(
     aportes = dict(traza.aportes[i])
     corte = traza.ranking_previo[min(n, len(traza.ranking_previo)) - 1]
     diferencia = traza.puntajes[corte] - traza.puntajes[i]
-    bajo_tau = traza.crudos[i] < motor.config.tau
-    if previa is None or previa > n or bajo_tau:
+    # τ solo lo excluye si MMR lo eligió y el orquestador lo quitó por quedar bajo el umbral;
+    # si MMR no lo eligió teniendo puesto previo ≤ n, lo desplazó la diversidad.
+    cortado_por_tau = i in traza.orden_mmr[:n] and traza.crudos[i] < motor.config.tau
+    if previa is None or previa > n or cortado_por_tau:
         detalle = (
             f"quedó en el puesto {previa} antes de diversificar, a {diferencia:.3f} del décimo"
-            if not bajo_tau
-            else f"su puntaje sin normalizar ({traza.crudos[i]:.3f}) es menor que el umbral τ"
         )
+        if cortado_por_tau:
+            detalle = (
+                f"aunque quedó en el puesto {previa}, su puntaje sin normalizar "
+                f"({traza.crudos[i]:.3f}) es menor que el umbral τ ({motor.config.tau:.2f})"
+            )
         return _diag(
             nombre,
             "puntaje_insuficiente",

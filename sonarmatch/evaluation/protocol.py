@@ -424,7 +424,7 @@ def evaluar_desde_cli(
     perfiles = cargar_perfiles(dataset, ruta, indice.por_nombre)
     log.info("%d usuarios con al menos 8 artistas emparejados", len(perfiles))
     descripcion = f"{dataset} ({ruta}) sobre {db} ({indice.n} artistas)"
-    base = ConfigMotor.desde_json(RUTA_CALIBRADOS)
+    base = ConfigMotor()  # siempre desde config.py: reproducible aunque ya haya calibrados
     try:
         res = ejecutar_protocolo(indice, perfiles, base, descripcion, semilla, paso, max_validacion)
     except ValueError as error:

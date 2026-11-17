@@ -196,3 +196,24 @@ def test_cli_evaluate_de_punta_a_punta(motor: MotorRecomendacion, tmp_path: Path
     vacio = tmp_path / "vacio.csv"
     vacio.write_text("user_id,artist_name,peso\n")
     assert cli.main([*args, "--ruta", str(vacio)]) == 2
+
+
+def test_evaluate_parte_de_config_aunque_existan_calibrados(
+    motor: MotorRecomendacion, tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Hallazgo B-04: una corrida previa no cambia el punto de partida del grid search."""
+    monkeypatch.chdir(tmp_path)
+    previos = ConfigMotor(a=0.1, b=0.1, c=0.1, d=0.7, lambda_mmr=0.5)
+    protocol.guardar_parametros(previos, tmp_path / "reports" / "parametros_calibrados.json")
+    db = tmp_path / "c.db"
+    assert cli.main(["ingest", "--fixture", "--db", str(db)]) == 0
+    ruta = tmp_path / "p.csv"
+    with ruta.open("w", encoding="utf-8", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["user_id", "artist_name", "peso"])
+        for p in perfiles_sinteticos(motor.indice):
+            w.writerows((p.usuario, motor.indice.nombre(i), peso) for i, peso in p.artistas)
+    args = ["evaluate", "--db", str(db), "--dataset", "csv", "--ruta", str(ruta), "--paso", "0.5"]
+    assert cli.main(args) == 0  # paso 0,5: solo se evalúa la configuración base
+    guardados = json.loads((tmp_path / "reports" / "parametros_calibrados.json").read_text())
+    assert (guardados["a"], guardados["d"]) == (ConfigMotor().a, ConfigMotor().d)

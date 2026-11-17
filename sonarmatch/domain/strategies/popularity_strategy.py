@@ -14,18 +14,17 @@ from sonarmatch.domain.models import Recomendacion
 from sonarmatch.domain.razonamiento import PerfilRazonado
 from sonarmatch.domain.strategies.base import ResultadoEstrategia
 
-N_ETIQUETAS_DOMINANTES = 3
 
-
-def etiquetas_dominantes(indice: IndiceCatalogo, perfil: PerfilRazonado) -> list[str]:
+def etiquetas_dominantes(indice: IndiceCatalogo, perfil: PerfilRazonado, n: int) -> list[str]:
     v = perfil.vector
     orden = [int(j) for j in np.lexsort((np.arange(len(v)), -v)) if v[j] > 0]
-    return [indice.vocabulario[j] for j in orden[:N_ETIQUETAS_DOMINANTES]]
+    return [indice.vocabulario[j] for j in orden[:n]]
 
 
 @dataclass
 class EstrategiaPopularidad:
     indice: IndiceCatalogo
+    n_etiquetas: int = 3  # ConfigMotor.n_etiquetas_dominantes
     id: Literal["popularidad"] = "popularidad"
 
     def recomendar(
@@ -38,7 +37,7 @@ class EstrategiaPopularidad:
     ) -> ResultadoEstrategia:
         ix = self.indice
         pos_vocab = {t: j for j, t in enumerate(ix.vocabulario)}
-        cols = [pos_vocab[t] for t in etiquetas_dominantes(ix, perfil)]
+        cols = [pos_vocab[t] for t in etiquetas_dominantes(ix, perfil, self.n_etiquetas)]
         por_popularidad = [int(i) for i in np.lexsort((np.arange(ix.n), -ix.oyentes))]
         if cols:
             tiene = np.asarray((ix.tfidf[:, cols] > 0).sum(axis=1)).ravel() > 0

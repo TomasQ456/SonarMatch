@@ -6,6 +6,7 @@ import time
 import numpy as np
 import pytest
 
+from sonarmatch.config import ConfigMotor
 from sonarmatch.domain.counterfactual import (
     Contrafactuales,
     Efecto,
@@ -191,3 +192,44 @@ def test_por_que_no_sin_estrategia_principal(motor: MotorRecomendacion) -> None:
     )
     assert diagnosticar(motor, res, nombres, no_recomendado).motivo == "no_conectado"
     assert np.isfinite(res.perfil.ppr).all()
+
+
+def _motor_tau(indice: IndiceCatalogo, tau: float) -> MotorRecomendacion:
+    return MotorRecomendacion(indice, ConfigMotor(tau=tau))
+
+
+PESOS_TAU = Pesos(0.3, 0.35, 0.15, 0.2, 0.2)
+
+
+def test_bajo_tau_sin_corte_es_desplazado_por_diversidad(indice: IndiceCatalogo) -> None:
+    """Hallazgo B-01: crudo < τ no basta; si τ no lo cortó, lo desplazó MMR."""
+    motor = _motor_tau(indice, 0.22)
+    res = _consulta(motor, SHOEGAZE, PESOS_TAU)
+    assert res.activaciones == []  # el décimo supera τ: el corte no se activó
+    traza = res.traza
+    assert traza is not None
+    i = indice.por_nombre["mogwai"]
+    assert traza.crudos[i] < 0.22
+    assert i not in traza.orden_mmr[:10]
+    d = diagnosticar(motor, res, list(SHOEGAZE), "Mogwai")
+    assert d.motivo == "desplazado_por_diversidad"
+    assert d.posicion_previa_mmr is not None
+    assert d.posicion_previa_mmr <= 10
+    assert d.similar_a is not None
+
+
+def test_cortado_por_tau_es_puntaje_insuficiente(indice: IndiceCatalogo) -> None:
+    motor = _motor_tau(indice, 0.3)
+    res = _consulta(motor, SHOEGAZE, PESOS_TAU)
+    assert [e for e, _ in res.activaciones]  # el corte por τ se activó
+    traza = res.traza
+    assert traza is not None
+    finales = {r.indice for r in res.recomendaciones}
+    cortados = [i for i in traza.orden_mmr[:10] if traza.crudos[i] < 0.3 and i not in finales]
+    assert cortados
+    i = cortados[0]
+    d = diagnosticar(motor, res, list(SHOEGAZE), indice.nombre(i))
+    assert d.motivo == "puntaje_insuficiente"
+    assert "umbral τ" in d.explicacion
+    assert d.posicion_previa_mmr is not None
+    assert d.diferencia_con_decimo is not None

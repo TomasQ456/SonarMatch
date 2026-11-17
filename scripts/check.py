@@ -93,8 +93,9 @@ def main() -> int:
     )[0]
     resultados["ruff check"] = ejecutar("ruff check", [PY, "-m", "ruff", "check", "."])[0]
     resultados["mypy"] = ejecutar("mypy", [PY, "-m", "mypy", "--strict", "sonarmatch"])[0]
-    lint = shutil.which("lint-imports", path=str(Path(PY).parent)) or "lint-imports"
-    resultados["import-linter"] = ejecutar("import-linter", [lint])[0]
+    # Con el intérprete actual (no el script lint-imports, cuyo shebang puede apuntar a otro venv).
+    lint = "from importlinter.cli import lint_imports_command as c; raise SystemExit(c())"
+    resultados["import-linter"] = ejecutar("import-linter", [PY, "-c", lint])[0]
     resultados["noqa"] = revisar_noqa()
     resultados["secretos"] = revisar_secretos()
     pytest = [PY, "-m", "pytest", "--cov=sonarmatch", "--cov-branch", f"--cov-fail-under={UMBRAL}"]

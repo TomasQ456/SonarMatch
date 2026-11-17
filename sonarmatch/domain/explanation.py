@@ -166,7 +166,7 @@ class Explicador:
             if etiquetas:
                 base += f" (comparte {lista_natural(etiquetas)})"
         else:
-            dominantes = etiquetas_dominantes(self.indice, pr)
+            dominantes = etiquetas_dominantes(self.indice, pr, self.config.n_etiquetas_dominantes)
             base = "Es de los artistas más escuchados"
             if dominantes:
                 base += f" con las etiquetas {lista_natural(dominantes)}"

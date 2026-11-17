@@ -191,10 +191,12 @@ En orden de prioridad (`ingestion/genre_mapping.py`):
 
 Cada mapeo guarda su método y su confianza. Las etiquetas sin mapeo se siguen usando en TF-IDF.
 Con las etiquetas reales de Last.fm del dataset HetRec 2011 (2.032 etiquetas con 5 o más usos),
-la **cobertura ponderada por uso es del 68,3 %**: 399 exactas, 212 por alias y 62 difusas (ver
-`reports/mapeo_resumen.md`). Las principales etiquetas sin mapear no son géneros: "female
-vocalists", "80s", "british". `reports/mapeo_muestra.csv` contiene 50 mapeos difusos al azar para
-revisión manual.
+la **cobertura ponderada por uso es del 67,3 %**: 399 exactas, 212 por alias, 39 difusas y 1
+manual (ver `reports/mapeo_resumen.md`). Las principales etiquetas sin mapear no son géneros:
+"female vocalists", "80s", "british". En la revisión cruzada se marcaron 19 de los 50 difusos de
+la muestra como incorrectos (`reports/mapeo_muestra_revisada.csv`) y se revisaron los 12
+restantes. Los 23 errores quedaron bloqueados o corregidos en `data/mapeo_manual.csv`, y los 39
+difusos actuales están revisados (`reports/mapeo_muestra.csv`).
 
 ### Perfil de géneros y S_onto
 
@@ -354,9 +356,9 @@ sintético de 5.000 nodos verifica los límites de 3 s y 1,5 s.
 
 - **Ingesta real pendiente:** sin API key de Last.fm, la app y la evaluación se demostraron con el
   catálogo sintético. El código de ingesta está probado con respuestas simuladas.
-- **Mapeo difuso:** con palabras cortas, `fuzz.ratio` ≥ 90 produce errores ("canada" →
-  "cantata"); se corrigen marcándolos en `data/mapeo_manual.csv` tras revisar
-  `reports/mapeo_muestra.csv`.
+- **Mapeo difuso:** con palabras cortas, `fuzz.ratio` ≥ 90 se equivoca a menudo (en la muestra
+  revisada, 23 de 62 difusos, por ejemplo "canada" → "cantata"). Los errores se bloquean en
+  `data/mapeo_manual.csv`; con un catálogo nuevo hay que repetir la revisión de la muestra.
 - **Sesgos de las fuentes:** las etiquetas de Last.fm y la jerarquía de Wikidata son colaborativas
   e incompletas.
 - **Importar el perfil desde Spotify** (opcional): leer los artistas más escuchados con OAuth para

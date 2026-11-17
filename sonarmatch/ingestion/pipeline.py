@@ -25,6 +25,7 @@ from sonarmatch.adapters.outbound.musicbrainz_client import INTERVALO_MB, Client
 from sonarmatch.adapters.outbound.sqlite_repository import RepositorioSQLite
 from sonarmatch.adapters.outbound.wikidata_client import ClienteWikidata
 from sonarmatch.domain.models import Genero
+from sonarmatch.domain.ontology import Ontologia
 from sonarmatch.domain.textos import normalizar_nombre
 from sonarmatch.ingestion.genre_mapping import (
     cobertura,
@@ -179,6 +180,9 @@ class Ingesta:
             generos, self.ontologia.aristas_subclase(), {m.genero_id for m in mapeos}
         )
         self.repo.guardar_generos(con_ancestros)
+        ontologia = Ontologia.construir({g.id: g.padres for g in con_ancestros})
+        for rota in ontologia.aristas_rotas:
+            log.info("ciclo en P279 roto: %s", rota)
         self.repo.guardar_mapeos(mapeos)
         cob = cobertura(catalogo.artistas, mapeos)
         muestra = muestra_difusos(mapeos, generos)
@@ -188,7 +192,11 @@ class Ingesta:
             metodos[m.metodo] = metodos.get(m.metodo, 0) + 1
         log.info("cobertura del mapeo de etiquetas: %.1f %%", 100 * cob)
         return ResumenIngesta(
-            generos=len(con_ancestros), mapeos=len(mapeos), cobertura=cob, metodos=metodos
+            generos=len(con_ancestros),
+            mapeos=len(mapeos),
+            cobertura=cob,
+            ciclos_rotos=len(ontologia.aristas_rotas),
+            metodos=metodos,
         )
 
 

@@ -61,9 +61,8 @@ def main() -> int:
     agente = os.environ.get("MB_USER_AGENT", "").strip() or AGENTE_GENERICO
     wikidata = ClienteWikidata(ClienteHTTP(1.0, agente, timeout=120), repo)
     generos = wikidata.generos_musicales()
-    mapeos = mapear_etiquetas(
-        etiquetas, generos, leer_mapeo_manual(Path("data/mapeo_manual.csv")), 90.0
-    )
+    manual = leer_mapeo_manual(Path("data/mapeo_manual.csv"))
+    mapeos = mapear_etiquetas(etiquetas, generos, manual, 90.0)
 
     mapeadas = {m.etiqueta for m in mapeos}
     total = sum(usos[t] for t in etiquetas)
@@ -82,6 +81,8 @@ def main() -> int:
         f"- Cobertura ponderada por usos: {100 * cubierto / total:.1f} %",
         "- Muestra de mapeos difusos para revisión manual: `reports/mapeo_muestra.csv` "
         "(columna `correcto` por llenar).",
+        f"- Mapeos manuales y bloqueos aplicados: {len(manual)} (`data/mapeo_manual.csv`); "
+        "la revisión de la muestra anterior está en `reports/mapeo_muestra_revisada.csv`.",
         "",
         "## Etiquetas más usadas sin mapear",
         "",

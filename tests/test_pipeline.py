@@ -11,6 +11,7 @@ from sonarmatch.domain.indice import IndiceCatalogo
 from sonarmatch.domain.models import TERMINOS, Artista, Catalogo, EntradaPerfil
 from sonarmatch.domain.pipeline import MotorRecomendacion, ResultadoConsulta
 from sonarmatch.domain.razonamiento import OpcionesMotor, Pesos
+from sonarmatch.domain.strategies.popularity_strategy import etiquetas_dominantes
 
 SHOEGAZE = ("Slowdive", "Low", "Codeine", "Red House Painters", "My Bloody Valentine", "Lush")
 JAZZ = ("Miles Davis", "Weather Report", "Charlie Parker")
@@ -162,6 +163,16 @@ def test_popularidad_ordena_por_oyentes_en_etiquetas_dominantes(motor: MotorReco
     resto = [r.oyentes for r in recs[1:]]
     assert resto == sorted(resto, reverse=True)  # se completa con los más populares
     assert len(recs) == 10
+
+
+def test_n_etiquetas_dominantes_sale_de_config(indice: IndiceCatalogo) -> None:
+    """Hallazgo B-06: el número de etiquetas dominantes es un hiperparámetro de ConfigMotor."""
+    entrada = [EntradaPerfil(n, 3) for n in ("Metallica", "Slayer")]
+    for k in (1, 3):
+        motor = MotorRecomendacion(indice, ConfigMotor(n_etiquetas_dominantes=k))
+        pr = motor.razonar(motor.perfil(entrada))
+        assert len(etiquetas_dominantes(indice, pr, motor.config.n_etiquetas_dominantes)) == k
+        assert motor.popularidad.n_etiquetas == k
 
 
 # ------------------------------------------------------------------ casos borde

@@ -51,6 +51,7 @@ class ConfigMotor:
     umbral_poco_conocido: float = 0.45  # P_nov crudo por encima del cual se dice "poco conocido"
     n_artistas_origen: int = 2
     n_etiquetas_clave: int = 3
+    n_etiquetas_dominantes: int = 3  # respaldo de popularidad: etiquetas del perfil que usa
 
     # --- Mapeo de etiquetas ---
     umbral_difuso: float = 90.0

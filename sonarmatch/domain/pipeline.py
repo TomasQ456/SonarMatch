@@ -49,7 +49,7 @@ class MotorRecomendacion:
     def __post_init__(self) -> None:
         self.grafo = EstrategiaGrafo(self.indice, self.config)
         self.contenido = EstrategiaContenido(self.indice)
-        self.popularidad = EstrategiaPopularidad(self.indice)
+        self.popularidad = EstrategiaPopularidad(self.indice, self.config.n_etiquetas_dominantes)
         self.orquestador = Orquestador(self.grafo, (self.contenido, self.popularidad), self.config)
         self.explicador = Explicador(self.indice, self.config)
 

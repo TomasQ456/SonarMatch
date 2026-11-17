@@ -160,3 +160,15 @@ def test_cli_ingest_sin_claves_falla_con_mensaje(
     monkeypatch.delenv("LASTFM_API_KEY", raising=False)
     assert cli.main(["ingest", "--db", str(tmp_path / "x.db")]) == 2
     assert "LASTFM_API_KEY" in caplog.text
+
+
+class OntologiaConCiclo(OntologiaFalsa):
+    def aristas_subclase(self) -> list[tuple[str, str]]:
+        return [*super().aristas_subclase(), ("Q1", "Q4")]  # Q4 → Q1 → Q4
+
+
+def test_ingesta_informa_ciclos_rotos(ingesta: Ingesta) -> None:
+    """Hallazgo B-05: el resumen cuenta las aristas P279 rotas al construir la ontología."""
+    assert ingesta.ejecutar().ciclos_rotos == 0
+    ingesta.ontologia = OntologiaConCiclo()
+    assert ingesta.ejecutar().ciclos_rotos == 1
