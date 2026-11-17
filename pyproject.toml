@@ -42,6 +42,8 @@ extend-exclude = ["data", "reports", "docs"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "I", "B", "UP", "SIM", "N", "S", "C90", "PL", "RUF", "PT"]
+# Notación matemática en docstrings y textos en español (signo menos, por, guion de rango).
+allowed-confusables = ["−", "×", "–", "α"]
 
 [tool.ruff.lint.mccabe]
 max-complexity = 10

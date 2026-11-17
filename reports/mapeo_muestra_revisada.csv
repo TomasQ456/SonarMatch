@@ -1,0 +1,51 @@
+etiqueta,genero_id,genero,confianza,correcto
+alternativo,Q1695023,alternative music,0.91,sí
+american,Q2407862,Americana,0.94,no
+avantgarde,Q2332751,avant-garde music,0.95,sí
+ballads,Q116690343,ballad,0.92,sí
+britrock,Q2566660,British rock,0.94,sí
+canada,Q174873,cantata,0.92,no
+cantautori,Q111540535,cantautor music,0.95,sí
+catchy,Q2941721,catch,0.91,no
+chanson francaise,Q1062400,chanson,0.94,sí
+classic rap,Q2976236,classic rag,0.91,no
+contemporary rnb,Q850412,contemporary R&B,0.94,sí
+dark songs,Q2265295,coon song,0.90,no
+dream,Q135397404,grungegaze,0.91,no
+drinking songs,Q2165184,drinking song,0.96,sí
+electrolash,Q861823,electroclash,0.96,sí
+eletronic,Q9778,electronic music,0.95,sí
+etno-pop,Q64055364,ethnic pop,0.94,sí
+euro-pop,Q517415,Europop,0.93,sí
+finale music,Q108631385,final music,0.96,no
+german hiphop,Q454071,German hip-hop,0.96,sí
+germany,Q112632092,German music,0.92,no
+harmonies,Q1233698,Harmonie,0.94,no
+hiphop,Q11401,hip-hop,0.92,sí
+horrorpunk,Q830325,horror punk,0.95,sí
+ilahi,Q2607222,İlahi,0.91,sí
+indierock,Q183504,indie rock,0.95,sí
+love-rock,Q1872505,lovers rock,0.90,no
+manchester,Q4841596,baggy,0.90,no
+modern-classic,Q65937946,modern classical music,0.93,sí
+morr music,Q140185391,Morris music,0.91,no
+musica russa,Q2498201,music of Russia,0.96,sí
+neo-pop,Q25099691,neon pop-punk,0.93,no
+new romantics,Q597240,New Romantic,0.96,sí
+nigger music,Q6942229,music of Niger,0.96,no
+outsiders,Q2416307,outsider music,0.94,sí
+poprock,Q484641,pop rock,0.93,sí
+post modern,Q2568406,postmodern music,0.95,sí
+power ballads,Q116690325,power ballad,0.96,sí
+ramonescore,Q11890008,ramopunk,0.96,sí
+riot grrl,Q677542,riot grrrl,0.95,sí
+rock alternative,Q11366,alternative rock,0.94,sí
+rock'n'roll,Q7749,rock and roll,0.92,sí
+romantica,Q207591,Romantic music,0.94,no
+russia,Q88340836,Russian music,0.92,no
+simon,Q17991683,saimon,0.91,no
+tambourine,Q2731147,tambourin,0.95,no
+traditional,Q235858,traditional folk music,0.91,sí
+wake up song,Q142095313,walk-up song,0.92,no
+work out music,Q109656646,sports music,0.96,sí
+worldmusic,Q205049,world music,0.95,sí
