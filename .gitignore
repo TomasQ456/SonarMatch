@@ -1,0 +1,21 @@
+.venv/
+venv/
+__pycache__/
+*.pyc
+.env
+.coverage
+.coverage.*
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.import_linter_cache/
+*.egg-info/
+build/
+dist/
+# Datos generados: la base y los datasets descargados no se versionan.
+data/*
+!data/mapeo_manual.csv
+!data/README.md
+# Logs de agentes (la tarea y el reporte sí se versionan).
+docs/agentes/logs/

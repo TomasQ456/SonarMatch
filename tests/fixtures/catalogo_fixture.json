@@ -1,0 +1,2003 @@
+{
+ "nota": "Datos sintéticos para pruebas; no provienen de Last.fm ni de Wikidata.",
+ "artists": [
+  {
+   "id": 1,
+   "name": "Beach House",
+   "listeners": 1900000,
+   "playcount": 47500000,
+   "tags": [
+    {
+     "tag": "dream pop",
+     "weight": 100
+    },
+    {
+     "tag": "indie",
+     "weight": 60
+    },
+    {
+     "tag": "shoegaze",
+     "weight": 25
+    },
+    {
+     "tag": "female vocalists",
+     "weight": 40
+    },
+    {
+     "tag": "seen live",
+     "weight": 20
+    }
+   ]
+  },
+  {
+   "id": 2,
+   "name": "Cocteau Twins",
+   "listeners": 1200000,
+   "playcount": 30000000,
+   "tags": [
+    {
+     "tag": "dream pop",
+     "weight": 100
+    },
+    {
+     "tag": "ethereal",
+     "weight": 80
+    },
+    {
+     "tag": "shoegaze",
+     "weight": 45
+    },
+    {
+     "tag": "4ad",
+     "weight": 30
+    },
+    {
+     "tag": "female vocalists",
+     "weight": 50
+    }
+   ]
+  },
+  {
+   "id": 3,
+   "name": "Slowdive",
+   "listeners": 1000000,
+   "playcount": 25000000,
+   "tags": [
+    {
+     "tag": "shoegaze",
+     "weight": 100
+    },
+    {
+     "tag": "dream pop",
+     "weight": 70
+    },
+    {
+     "tag": "indie",
+     "weight": 20
+    },
+    {
+     "tag": "90s",
+     "weight": 15
+    }
+   ]
+  },
+  {
+   "id": 4,
+   "name": "My Bloody Valentine",
+   "listeners": 1500000,
+   "playcount": 37500000,
+   "tags": [
+    {
+     "tag": "shoegaze",
+     "weight": 100
+    },
+    {
+     "tag": "noise pop",
+     "weight": 40
+    },
+    {
+     "tag": "alternative",
+     "weight": 30
+    },
+    {
+     "tag": "noise rock",
+     "weight": 20
+    }
+   ]
+  },
+  {
+   "id": 5,
+   "name": "Mazzy Star",
+   "listeners": 1300000,
+   "playcount": 32500000,
+   "tags": [
+    {
+     "tag": "dream pop",
+     "weight": 90
+    },
+    {
+     "tag": "alternative",
+     "weight": 40
+    },
+    {
+     "tag": "female vocalists",
+     "weight": 60
+    },
+    {
+     "tag": "slowcore",
+     "weight": 20
+    }
+   ]
+  },
+  {
+   "id": 6,
+   "name": "Lush",
+   "listeners": 300000,
+   "playcount": 7500000,
+   "tags": [
+    {
+     "tag": "shoegaze",
+     "weight": 100
+    },
+    {
+     "tag": "dream pop",
+     "weight": 60
+    },
+    {
+     "tag": "4ad",
+     "weight": 30
+    },
+    {
+     "tag": "female vocalists",
+     "weight": 30
+    }
+   ]
+  },
+  {
+   "id": 7,
+   "name": "Ride",
+   "listeners": 450000,
+   "playcount": 11250000,
+   "tags": [
+    {
+     "tag": "shoegaze",
+     "weight": 100
+    },
+    {
+     "tag": "britpop",
+     "weight": 30
+    },
+    {
+     "tag": "indie",
+     "weight": 20
+    }
+   ]
+  },
+  {
+   "id": 8,
+   "name": "Wild Nothing",
+   "listeners": 600000,
+   "playcount": 15000000,
+   "tags": [
+    {
+     "tag": "dream pop",
+     "weight": 100
+    },
+    {
+     "tag": "indie pop",
+     "weight": 50
+    },
+    {
+     "tag": "chillwave",
+     "weight": 30
+    }
+   ]
+  },
+  {
+   "id": 9,
+   "name": "Cigarettes After Sex",
+   "listeners": 2200000,
+   "playcount": 55000000,
+   "tags": [
+    {
+     "tag": "dream pop",
+     "weight": 100
+    },
+    {
+     "tag": "slowcore",
+     "weight": 30
+    },
+    {
+     "tag": "ambient pop",
+     "weight": 20
+    }
+   ]
+  },
+  {
+   "id": 10,
+   "name": "Alvvays",
+   "listeners": 700000,
+   "playcount": 17500000,
+   "tags": [
+    {
+     "tag": "indie pop",
+     "weight": 100
+    },
+    {
+     "tag": "dream pop",
+     "weight": 50
+    },
+    {
+     "tag": "jangle pop",
+     "weight": 40
+    }
+   ]
+  },
+  {
+   "id": 11,
+   "name": "Galaxie 500",
+   "listeners": 250000,
+   "playcount": 6250000,
+   "tags": [
+    {
+     "tag": "slowcore",
+     "weight": 70
+    },
+    {
+     "tag": "dream pop",
+     "weight": 70
+    },
+    {
+     "tag": "indie rock",
+     "weight": 50
+    }
+   ]
+  },
+  {
+   "id": 12,
+   "name": "Pale Saints",
+   "listeners": 60000,
+   "playcount": 1500000,
+   "tags": [
+    {
+     "tag": "shoegaze",
+     "weight": 100
+    },
+    {
+     "tag": "dream pop",
+     "weight": 50
+    },
+    {
+     "tag": "4ad",
+     "weight": 40
+    }
+   ]
+  },
+  {
+   "id": 13,
+   "name": "Low",
+   "listeners": 600000,
+   "playcount": 15000000,
+   "tags": [
+    {
+     "tag": "slowcore",
+     "weight": 100
+    },
+    {
+     "tag": "indie rock",
+     "weight": 40
+    },
+    {
+     "tag": "sadcore",
+     "weight": 30
+    }
+   ]
+  },
+  {
+   "id": 14,
+   "name": "Red House Painters",
+   "listeners": 200000,
+   "playcount": 5000000,
+   "tags": [
+    {
+     "tag": "slowcore",
+     "weight": 100
+    },
+    {
+     "tag": "sadcore",
+     "weight": 50
+    },
+    {
+     "tag": "indie folk",
+     "weight": 20
+    }
+   ]
+  },
+  {
+   "id": 15,
+   "name": "Codeine",
+   "listeners": 70000,
+   "playcount": 1750000,
+   "tags": [
+    {
+     "tag": "slowcore",
+     "weight": 100
+    },
+    {
+     "tag": "indie rock",
+     "weight": 30
+    }
+   ]
+  },
+  {
+   "id": 16,
+   "name": "Duster",
+   "listeners": 300000,
+   "playcount": 7500000,
+   "tags": [
+    {
+     "tag": "slowcore",
+     "weight": 90
+    },
+    {
+     "tag": "space rock",
+     "weight": 50
+    },
+    {
+     "tag": "indie rock",
+     "weight": 40
+    }
+   ]
+  },
+  {
+   "id": 17,
+   "name": "Godspeed You! Black Emperor",
+   "listeners": 800000,
+   "playcount": 20000000,
+   "tags": [
+    {
+     "tag": "post-rock",
+     "weight": 100
+    },
+    {
+     "tag": "experimental",
+     "weight": 40
+    },
+    {
+     "tag": "drone",
+     "weight": 20
+    }
+   ]
+  },
+  {
+   "id": 18,
+   "name": "Explosions in the Sky",
+   "listeners": 1100000,
+   "playcount": 27500000,
+   "tags": [
+    {
+     "tag": "post-rock",
+     "weight": 100
+    },
+    {
+     "tag": "instrumental",
+     "weight": 60
+    }
+   ]
+  },
+  {
+   "id": 19,
+   "name": "Mogwai",
+   "listeners": 900000,
+   "playcount": 22500000,
+   "tags": [
+    {
+     "tag": "post-rock",
+     "weight": 100
+    },
+    {
+     "tag": "instrumental",
+     "weight": 40
+    },
+    {
+     "tag": "shoegaze",
+     "weight": 10
+    }
+   ]
+  },
+  {
+   "id": 20,
+   "name": "Sigur Rós",
+   "listeners": 1600000,
+   "playcount": 40000000,
+   "tags": [
+    {
+     "tag": "post-rock",
+     "weight": 100
+    },
+    {
+     "tag": "ambient",
+     "weight": 40
+    },
+    {
+     "tag": "ethereal",
+     "weight": 30
+    }
+   ]
+  },
+  {
+   "id": 21,
+   "name": "Metallica",
+   "listeners": 4000000,
+   "playcount": 100000000,
+   "tags": [
+    {
+     "tag": "thrash metal",
+     "weight": 100
+    },
+    {
+     "tag": "heavy metal",
+     "weight": 80
+    },
+    {
+     "tag": "metal",
+     "weight": 60
+    }
+   ]
+  },
+  {
+   "id": 22,
+   "name": "Slayer",
+   "listeners": 1400000,
+   "playcount": 35000000,
+   "tags": [
+    {
+     "tag": "thrash metal",
+     "weight": 100
+    },
+    {
+     "tag": "metal",
+     "weight": 50
+    }
+   ]
+  },
+  {
+   "id": 23,
+   "name": "Megadeth",
+   "listeners": 1700000,
+   "playcount": 42500000,
+   "tags": [
+    {
+     "tag": "thrash metal",
+     "weight": 100
+    },
+    {
+     "tag": "heavy metal",
+     "weight": 60
+    }
+   ]
+  },
+  {
+   "id": 24,
+   "name": "Death",
+   "listeners": 500000,
+   "playcount": 12500000,
+   "tags": [
+    {
+     "tag": "death metal",
+     "weight": 100
+    },
+    {
+     "tag": "progressive death metal",
+     "weight": 40
+    }
+   ]
+  },
+  {
+   "id": 25,
+   "name": "Cannibal Corpse",
+   "listeners": 600000,
+   "playcount": 15000000,
+   "tags": [
+    {
+     "tag": "death metal",
+     "weight": 100
+    },
+    {
+     "tag": "brutal death metal",
+     "weight": 50
+    }
+   ]
+  },
+  {
+   "id": 26,
+   "name": "Mayhem",
+   "listeners": 400000,
+   "playcount": 10000000,
+   "tags": [
+    {
+     "tag": "black metal",
+     "weight": 100
+    },
+    {
+     "tag": "true norwegian black metal",
+     "weight": 30
+    }
+   ]
+  },
+  {
+   "id": 27,
+   "name": "Darkthrone",
+   "listeners": 380000,
+   "playcount": 9500000,
+   "tags": [
+    {
+     "tag": "black metal",
+     "weight": 100
+    },
+    {
+     "tag": "raw black metal",
+     "weight": 30
+    }
+   ]
+  },
+  {
+   "id": 28,
+   "name": "Joy Division",
+   "listeners": 2000000,
+   "playcount": 50000000,
+   "tags": [
+    {
+     "tag": "post-punk",
+     "weight": 100
+    },
+    {
+     "tag": "new wave",
+     "weight": 40
+    },
+    {
+     "tag": "80s",
+     "weight": 30
+    }
+   ]
+  },
+  {
+   "id": 29,
+   "name": "The Cure",
+   "listeners": 3200000,
+   "playcount": 80000000,
+   "tags": [
+    {
+     "tag": "post-punk",
+     "weight": 80
+    },
+    {
+     "tag": "new wave",
+     "weight": 70
+    },
+    {
+     "tag": "gothic rock",
+     "weight": 50
+    }
+   ]
+  },
+  {
+   "id": 30,
+   "name": "Siouxsie and the Banshees",
+   "listeners": 700000,
+   "playcount": 17500000,
+   "tags": [
+    {
+     "tag": "post-punk",
+     "weight": 90
+    },
+    {
+     "tag": "gothic rock",
+     "weight": 70
+    },
+    {
+     "tag": "female vocalists",
+     "weight": 40
+    }
+   ]
+  },
+  {
+   "id": 31,
+   "name": "Bauhaus",
+   "listeners": 600000,
+   "playcount": 15000000,
+   "tags": [
+    {
+     "tag": "gothic rock",
+     "weight": 100
+    },
+    {
+     "tag": "post-punk",
+     "weight": 80
+    }
+   ]
+  },
+  {
+   "id": 32,
+   "name": "Interpol",
+   "listeners": 1800000,
+   "playcount": 45000000,
+   "tags": [
+    {
+     "tag": "post-punk",
+     "weight": 70
+    },
+    {
+     "tag": "indie rock",
+     "weight": 80
+    }
+   ]
+  },
+  {
+   "id": 33,
+   "name": "Aphex Twin",
+   "listeners": 1500000,
+   "playcount": 37500000,
+   "tags": [
+    {
+     "tag": "idm",
+     "weight": 100
+    },
+    {
+     "tag": "electronic",
+     "weight": 70
+    },
+    {
+     "tag": "ambient",
+     "weight": 40
+    }
+   ]
+  },
+  {
+   "id": 34,
+   "name": "Boards of Canada",
+   "listeners": 1100000,
+   "playcount": 27500000,
+   "tags": [
+    {
+     "tag": "idm",
+     "weight": 90
+    },
+    {
+     "tag": "electronic",
+     "weight": 60
+    },
+    {
+     "tag": "ambient",
+     "weight": 50
+    }
+   ]
+  },
+  {
+   "id": 35,
+   "name": "Brian Eno",
+   "listeners": 1200000,
+   "playcount": 30000000,
+   "tags": [
+    {
+     "tag": "ambient",
+     "weight": 100
+    },
+    {
+     "tag": "electronic",
+     "weight": 40
+    },
+    {
+     "tag": "experimental",
+     "weight": 40
+    }
+   ]
+  },
+  {
+   "id": 36,
+   "name": "Burial",
+   "listeners": 700000,
+   "playcount": 17500000,
+   "tags": [
+    {
+     "tag": "dubstep",
+     "weight": 80
+    },
+    {
+     "tag": "electronic",
+     "weight": 60
+    },
+    {
+     "tag": "ambient",
+     "weight": 30
+    }
+   ]
+  },
+  {
+   "id": 37,
+   "name": "Massive Attack",
+   "listeners": 2300000,
+   "playcount": 57500000,
+   "tags": [
+    {
+     "tag": "trip-hop",
+     "weight": 100
+    },
+    {
+     "tag": "electronic",
+     "weight": 60
+    }
+   ]
+  },
+  {
+   "id": 38,
+   "name": "Portishead",
+   "listeners": 1900000,
+   "playcount": 47500000,
+   "tags": [
+    {
+     "tag": "trip-hop",
+     "weight": 100
+    },
+    {
+     "tag": "female vocalists",
+     "weight": 50
+    },
+    {
+     "tag": "electronic",
+     "weight": 40
+    }
+   ]
+  },
+  {
+   "id": 39,
+   "name": "Larry Heard",
+   "listeners": 90000,
+   "playcount": 2250000,
+   "tags": [
+    {
+     "tag": "deep house",
+     "weight": 100
+    },
+    {
+     "tag": "house",
+     "weight": 60
+    },
+    {
+     "tag": "chicago house",
+     "weight": 40
+    }
+   ]
+  },
+  {
+   "id": 40,
+   "name": "Richie Hawtin",
+   "listeners": 200000,
+   "playcount": 5000000,
+   "tags": [
+    {
+     "tag": "techno",
+     "weight": 100
+    },
+    {
+     "tag": "minimal",
+     "weight": 60
+    }
+   ]
+  },
+  {
+   "id": 41,
+   "name": "Madvillain",
+   "listeners": 900000,
+   "playcount": 22500000,
+   "tags": [
+    {
+     "tag": "hip-hop",
+     "weight": 90
+    },
+    {
+     "tag": "underground hip-hop",
+     "weight": 100
+    },
+    {
+     "tag": "abstract",
+     "weight": 20
+    }
+   ]
+  },
+  {
+   "id": 42,
+   "name": "MF DOOM",
+   "listeners": 1400000,
+   "playcount": 35000000,
+   "tags": [
+    {
+     "tag": "underground hip-hop",
+     "weight": 100
+    },
+    {
+     "tag": "hip-hop",
+     "weight": 90
+    },
+    {
+     "tag": "rap",
+     "weight": 50
+    }
+   ]
+  },
+  {
+   "id": 43,
+   "name": "Kendrick Lamar",
+   "listeners": 4500000,
+   "playcount": 112500000,
+   "tags": [
+    {
+     "tag": "hip-hop",
+     "weight": 100
+    },
+    {
+     "tag": "rap",
+     "weight": 90
+    },
+    {
+     "tag": "west coast",
+     "weight": 40
+    }
+   ]
+  },
+  {
+   "id": 44,
+   "name": "Travis Scott",
+   "listeners": 3800000,
+   "playcount": 95000000,
+   "tags": [
+    {
+     "tag": "trap",
+     "weight": 100
+    },
+    {
+     "tag": "hip-hop",
+     "weight": 70
+    },
+    {
+     "tag": "rap",
+     "weight": 60
+    }
+   ]
+  },
+  {
+   "id": 45,
+   "name": "Run the Jewels",
+   "listeners": 900000,
+   "playcount": 22500000,
+   "tags": [
+    {
+     "tag": "hip-hop",
+     "weight": 100
+    },
+    {
+     "tag": "rap",
+     "weight": 70
+    },
+    {
+     "tag": "underground hip-hop",
+     "weight": 40
+    }
+   ]
+  },
+  {
+   "id": 46,
+   "name": "Bon Iver",
+   "listeners": 3000000,
+   "playcount": 75000000,
+   "tags": [
+    {
+     "tag": "indie folk",
+     "weight": 100
+    },
+    {
+     "tag": "folk",
+     "weight": 60
+    },
+    {
+     "tag": "indie",
+     "weight": 40
+    }
+   ]
+  },
+  {
+   "id": 47,
+   "name": "Fleet Foxes",
+   "listeners": 1700000,
+   "playcount": 42500000,
+   "tags": [
+    {
+     "tag": "indie folk",
+     "weight": 100
+    },
+    {
+     "tag": "folk",
+     "weight": 70
+    },
+    {
+     "tag": "folk rock",
+     "weight": 30
+    }
+   ]
+  },
+  {
+   "id": 48,
+   "name": "Nick Drake",
+   "listeners": 1300000,
+   "playcount": 32500000,
+   "tags": [
+    {
+     "tag": "folk",
+     "weight": 100
+    },
+    {
+     "tag": "singer-songwriter",
+     "weight": 80
+    },
+    {
+     "tag": "folk rock",
+     "weight": 20
+    }
+   ]
+  },
+  {
+   "id": 49,
+   "name": "Miles Davis",
+   "listeners": 2000000,
+   "playcount": 50000000,
+   "tags": [
+    {
+     "tag": "jazz",
+     "weight": 100
+    },
+    {
+     "tag": "fusion",
+     "weight": 50
+    },
+    {
+     "tag": "trumpet",
+     "weight": 30
+    }
+   ]
+  },
+  {
+   "id": 50,
+   "name": "Weather Report",
+   "listeners": 300000,
+   "playcount": 7500000,
+   "tags": [
+    {
+     "tag": "jazz fusion",
+     "weight": 100
+    },
+    {
+     "tag": "jazz",
+     "weight": 60
+    }
+   ]
+  },
+  {
+   "id": 51,
+   "name": "Charlie Parker",
+   "listeners": 600000,
+   "playcount": 15000000,
+   "tags": [
+    {
+     "tag": "bebop",
+     "weight": 100
+    },
+    {
+     "tag": "jazz",
+     "weight": 80
+    },
+    {
+     "tag": "saxophone",
+     "weight": 30
+    }
+   ]
+  }
+ ],
+ "similar": [
+  {
+   "src": 1,
+   "dst": 2,
+   "match": 0.317
+  },
+  {
+   "src": 1,
+   "dst": 3,
+   "match": 0.451
+  },
+  {
+   "src": 1,
+   "dst": 4,
+   "match": 0.541
+  },
+  {
+   "src": 1,
+   "dst": 5,
+   "match": 0.924
+  },
+  {
+   "src": 1,
+   "dst": 6,
+   "match": 0.499
+  },
+  {
+   "src": 1,
+   "dst": 10,
+   "match": 0.39
+  },
+  {
+   "src": 1,
+   "dst": 12,
+   "match": 0.925
+  },
+  {
+   "src": 1,
+   "dst": 38,
+   "match": 0.2
+  },
+  {
+   "src": 1,
+   "dst": 46,
+   "match": 0.25
+  },
+  {
+   "src": 2,
+   "dst": 3,
+   "match": 0.938
+  },
+  {
+   "src": 2,
+   "dst": 10,
+   "match": 0.388
+  },
+  {
+   "src": 2,
+   "dst": 12,
+   "match": 0.393
+  },
+  {
+   "src": 2,
+   "dst": 30,
+   "match": 0.45
+  },
+  {
+   "src": 2,
+   "dst": 35,
+   "match": 0.2
+  },
+  {
+   "src": 3,
+   "dst": 4,
+   "match": 0.384
+  },
+  {
+   "src": 3,
+   "dst": 8,
+   "match": 0.53
+  },
+  {
+   "src": 3,
+   "dst": 9,
+   "match": 0.873
+  },
+  {
+   "src": 3,
+   "dst": 11,
+   "match": 0.542
+  },
+  {
+   "src": 3,
+   "dst": 12,
+   "match": 0.568
+  },
+  {
+   "src": 3,
+   "dst": 19,
+   "match": 0.35
+  },
+  {
+   "src": 3,
+   "dst": 20,
+   "match": 0.3
+  },
+  {
+   "src": 4,
+   "dst": 5,
+   "match": 0.576
+  },
+  {
+   "src": 4,
+   "dst": 8,
+   "match": 0.54
+  },
+  {
+   "src": 4,
+   "dst": 11,
+   "match": 0.569
+  },
+  {
+   "src": 4,
+   "dst": 12,
+   "match": 0.605
+  },
+  {
+   "src": 5,
+   "dst": 6,
+   "match": 0.597
+  },
+  {
+   "src": 5,
+   "dst": 8,
+   "match": 0.497
+  },
+  {
+   "src": 5,
+   "dst": 10,
+   "match": 0.9
+  },
+  {
+   "src": 5,
+   "dst": 12,
+   "match": 0.709
+  },
+  {
+   "src": 5,
+   "dst": 13,
+   "match": 0.3
+  },
+  {
+   "src": 6,
+   "dst": 7,
+   "match": 0.852
+  },
+  {
+   "src": 6,
+   "dst": 8,
+   "match": 0.364
+  },
+  {
+   "src": 6,
+   "dst": 11,
+   "match": 0.642
+  },
+  {
+   "src": 6,
+   "dst": 12,
+   "match": 0.659
+  },
+  {
+   "src": 7,
+   "dst": 8,
+   "match": 0.562
+  },
+  {
+   "src": 7,
+   "dst": 9,
+   "match": 0.785
+  },
+  {
+   "src": 7,
+   "dst": 11,
+   "match": 0.859
+  },
+  {
+   "src": 8,
+   "dst": 9,
+   "match": 0.361
+  },
+  {
+   "src": 8,
+   "dst": 11,
+   "match": 0.463
+  },
+  {
+   "src": 8,
+   "dst": 12,
+   "match": 0.632
+  },
+  {
+   "src": 8,
+   "dst": 29,
+   "match": 0.3
+  },
+  {
+   "src": 9,
+   "dst": 10,
+   "match": 0.611
+  },
+  {
+   "src": 9,
+   "dst": 11,
+   "match": 0.891
+  },
+  {
+   "src": 9,
+   "dst": 12,
+   "match": 0.526
+  },
+  {
+   "src": 9,
+   "dst": 13,
+   "match": 0.25
+  },
+  {
+   "src": 10,
+   "dst": 11,
+   "match": 0.766
+  },
+  {
+   "src": 11,
+   "dst": 12,
+   "match": 0.882
+  },
+  {
+   "src": 11,
+   "dst": 13,
+   "match": 0.6
+  },
+  {
+   "src": 13,
+   "dst": 14,
+   "match": 0.307
+  },
+  {
+   "src": 13,
+   "dst": 16,
+   "match": 0.955
+  },
+  {
+   "src": 14,
+   "dst": 15,
+   "match": 0.472
+  },
+  {
+   "src": 14,
+   "dst": 17,
+   "match": 0.768
+  },
+  {
+   "src": 14,
+   "dst": 18,
+   "match": 0.731
+  },
+  {
+   "src": 14,
+   "dst": 19,
+   "match": 0.894
+  },
+  {
+   "src": 14,
+   "dst": 48,
+   "match": 0.35
+  },
+  {
+   "src": 15,
+   "dst": 16,
+   "match": 0.662
+  },
+  {
+   "src": 15,
+   "dst": 17,
+   "match": 0.521
+  },
+  {
+   "src": 15,
+   "dst": 19,
+   "match": 0.76
+  },
+  {
+   "src": 16,
+   "dst": 17,
+   "match": 0.721
+  },
+  {
+   "src": 16,
+   "dst": 18,
+   "match": 0.725
+  },
+  {
+   "src": 16,
+   "dst": 19,
+   "match": 0.369
+  },
+  {
+   "src": 17,
+   "dst": 18,
+   "match": 0.71
+  },
+  {
+   "src": 17,
+   "dst": 20,
+   "match": 0.667
+  },
+  {
+   "src": 17,
+   "dst": 35,
+   "match": 0.2
+  },
+  {
+   "src": 18,
+   "dst": 19,
+   "match": 0.528
+  },
+  {
+   "src": 19,
+   "dst": 20,
+   "match": 0.972
+  },
+  {
+   "src": 20,
+   "dst": 34,
+   "match": 0.25
+  },
+  {
+   "src": 21,
+   "dst": 22,
+   "match": 0.973
+  },
+  {
+   "src": 21,
+   "dst": 25,
+   "match": 0.671
+  },
+  {
+   "src": 21,
+   "dst": 26,
+   "match": 0.854
+  },
+  {
+   "src": 22,
+   "dst": 23,
+   "match": 0.452
+  },
+  {
+   "src": 22,
+   "dst": 24,
+   "match": 0.932
+  },
+  {
+   "src": 22,
+   "dst": 26,
+   "match": 0.982
+  },
+  {
+   "src": 23,
+   "dst": 24,
+   "match": 0.937
+  },
+  {
+   "src": 23,
+   "dst": 25,
+   "match": 0.454
+  },
+  {
+   "src": 23,
+   "dst": 27,
+   "match": 0.647
+  },
+  {
+   "src": 24,
+   "dst": 25,
+   "match": 0.484
+  },
+  {
+   "src": 24,
+   "dst": 26,
+   "match": 0.481
+  },
+  {
+   "src": 25,
+   "dst": 26,
+   "match": 0.522
+  },
+  {
+   "src": 25,
+   "dst": 27,
+   "match": 0.517
+  },
+  {
+   "src": 26,
+   "dst": 27,
+   "match": 0.636
+  },
+  {
+   "src": 26,
+   "dst": 31,
+   "match": 0.1
+  },
+  {
+   "src": 28,
+   "dst": 29,
+   "match": 0.767
+  },
+  {
+   "src": 28,
+   "dst": 32,
+   "match": 0.7
+  },
+  {
+   "src": 29,
+   "dst": 30,
+   "match": 0.801
+  },
+  {
+   "src": 29,
+   "dst": 31,
+   "match": 0.493
+  },
+  {
+   "src": 30,
+   "dst": 31,
+   "match": 0.821
+  },
+  {
+   "src": 30,
+   "dst": 32,
+   "match": 0.877
+  },
+  {
+   "src": 31,
+   "dst": 32,
+   "match": 0.371
+  },
+  {
+   "src": 33,
+   "dst": 34,
+   "match": 0.788
+  },
+  {
+   "src": 33,
+   "dst": 37,
+   "match": 0.944
+  },
+  {
+   "src": 33,
+   "dst": 38,
+   "match": 0.868
+  },
+  {
+   "src": 33,
+   "dst": 39,
+   "match": 0.994
+  },
+  {
+   "src": 33,
+   "dst": 40,
+   "match": 0.868
+  },
+  {
+   "src": 34,
+   "dst": 35,
+   "match": 0.737
+  },
+  {
+   "src": 34,
+   "dst": 36,
+   "match": 0.532
+  },
+  {
+   "src": 34,
+   "dst": 39,
+   "match": 0.493
+  },
+  {
+   "src": 35,
+   "dst": 36,
+   "match": 0.828
+  },
+  {
+   "src": 35,
+   "dst": 37,
+   "match": 0.735
+  },
+  {
+   "src": 35,
+   "dst": 39,
+   "match": 0.941
+  },
+  {
+   "src": 35,
+   "dst": 40,
+   "match": 0.875
+  },
+  {
+   "src": 36,
+   "dst": 37,
+   "match": 0.334
+  },
+  {
+   "src": 36,
+   "dst": 39,
+   "match": 0.615
+  },
+  {
+   "src": 36,
+   "dst": 40,
+   "match": 0.611
+  },
+  {
+   "src": 36,
+   "dst": 41,
+   "match": 0.15
+  },
+  {
+   "src": 37,
+   "dst": 38,
+   "match": 0.95
+  },
+  {
+   "src": 37,
+   "dst": 39,
+   "match": 0.544
+  },
+  {
+   "src": 37,
+   "dst": 40,
+   "match": 0.609
+  },
+  {
+   "src": 38,
+   "dst": 39,
+   "match": 0.976
+  },
+  {
+   "src": 39,
+   "dst": 40,
+   "match": 0.598
+  },
+  {
+   "src": 41,
+   "dst": 42,
+   "match": 0.486
+  },
+  {
+   "src": 41,
+   "dst": 44,
+   "match": 0.478
+  },
+  {
+   "src": 42,
+   "dst": 43,
+   "match": 0.736
+  },
+  {
+   "src": 43,
+   "dst": 44,
+   "match": 0.464
+  },
+  {
+   "src": 44,
+   "dst": 45,
+   "match": 0.646
+  },
+  {
+   "src": 46,
+   "dst": 47,
+   "match": 0.808
+  },
+  {
+   "src": 46,
+   "dst": 48,
+   "match": 0.885
+  },
+  {
+   "src": 47,
+   "dst": 48,
+   "match": 0.642
+  },
+  {
+   "src": 49,
+   "dst": 50,
+   "match": 0.655
+  },
+  {
+   "src": 49,
+   "dst": 51,
+   "match": 0.597
+  },
+  {
+   "src": 50,
+   "dst": 51,
+   "match": 0.761
+  }
+ ],
+ "genres": [
+  {
+   "qid": "F01",
+   "label_en": "rock",
+   "label_es": "rock",
+   "aliases": [
+    "rock music"
+   ],
+   "parents": []
+  },
+  {
+   "qid": "F02",
+   "label_en": "alternative rock",
+   "label_es": "rock alternativo",
+   "aliases": [
+    "alternative",
+    "alt rock"
+   ],
+   "parents": [
+    "F01"
+   ]
+  },
+  {
+   "qid": "F03",
+   "label_en": "indie rock",
+   "label_es": "rock independiente",
+   "aliases": [
+    "indie"
+   ],
+   "parents": [
+    "F02"
+   ]
+  },
+  {
+   "qid": "F04",
+   "label_en": "dream pop",
+   "label_es": "dream pop",
+   "aliases": [
+    "dreampop"
+   ],
+   "parents": [
+    "F03",
+    "F35"
+   ]
+  },
+  {
+   "qid": "F05",
+   "label_en": "shoegaze",
+   "label_es": "shoegaze",
+   "aliases": [
+    "shoegazing"
+   ],
+   "parents": [
+    "F03",
+    "F36"
+   ]
+  },
+  {
+   "qid": "F06",
+   "label_en": "slowcore",
+   "label_es": "slowcore",
+   "aliases": [
+    "sadcore"
+   ],
+   "parents": [
+    "F03"
+   ]
+  },
+  {
+   "qid": "F07",
+   "label_en": "noise rock",
+   "label_es": "noise rock",
+   "aliases": [],
+   "parents": [
+    "F02"
+   ]
+  },
+  {
+   "qid": "F08",
+   "label_en": "post-rock",
+   "label_es": "post-rock",
+   "aliases": [
+    "post rock"
+   ],
+   "parents": [
+    "F02"
+   ]
+  },
+  {
+   "qid": "F09",
+   "label_en": "heavy metal",
+   "label_es": "heavy metal",
+   "aliases": [
+    "metal"
+   ],
+   "parents": [
+    "F01"
+   ]
+  },
+  {
+   "qid": "F10",
+   "label_en": "thrash metal",
+   "label_es": "thrash metal",
+   "aliases": [
+    "thrash"
+   ],
+   "parents": [
+    "F09"
+   ]
+  },
+  {
+   "qid": "F11",
+   "label_en": "death metal",
+   "label_es": "death metal",
+   "aliases": [],
+   "parents": [
+    "F09"
+   ]
+  },
+  {
+   "qid": "F12",
+   "label_en": "black metal",
+   "label_es": "black metal",
+   "aliases": [],
+   "parents": [
+    "F09"
+   ]
+  },
+  {
+   "qid": "F13",
+   "label_en": "punk rock",
+   "label_es": "punk rock",
+   "aliases": [
+    "punk"
+   ],
+   "parents": [
+    "F01"
+   ]
+  },
+  {
+   "qid": "F14",
+   "label_en": "post-punk",
+   "label_es": "post-punk",
+   "aliases": [
+    "post punk"
+   ],
+   "parents": [
+    "F13"
+   ]
+  },
+  {
+   "qid": "F15",
+   "label_en": "gothic rock",
+   "label_es": "rock gótico",
+   "aliases": [
+    "goth rock",
+    "goth"
+   ],
+   "parents": [
+    "F14"
+   ]
+  },
+  {
+   "qid": "F16",
+   "label_en": "electronic music",
+   "label_es": "música electrónica",
+   "aliases": [
+    "electronic",
+    "electronica"
+   ],
+   "parents": []
+  },
+  {
+   "qid": "F17",
+   "label_en": "ambient music",
+   "label_es": "música ambiental",
+   "aliases": [
+    "ambient"
+   ],
+   "parents": [
+    "F16"
+   ]
+  },
+  {
+   "qid": "F18",
+   "label_en": "dark ambient",
+   "label_es": "dark ambient",
+   "aliases": [],
+   "parents": [
+    "F17"
+   ]
+  },
+  {
+   "qid": "F19",
+   "label_en": "house music",
+   "label_es": "house",
+   "aliases": [
+    "house"
+   ],
+   "parents": [
+    "F16"
+   ]
+  },
+  {
+   "qid": "F20",
+   "label_en": "deep house",
+   "label_es": "deep house",
+   "aliases": [],
+   "parents": [
+    "F19"
+   ]
+  },
+  {
+   "qid": "F21",
+   "label_en": "techno",
+   "label_es": "techno",
+   "aliases": [],
+   "parents": [
+    "F16"
+   ]
+  },
+  {
+   "qid": "F22",
+   "label_en": "intelligent dance music",
+   "label_es": "IDM",
+   "aliases": [
+    "idm"
+   ],
+   "parents": [
+    "F16"
+   ]
+  },
+  {
+   "qid": "F23",
+   "label_en": "trip hop",
+   "label_es": "trip hop",
+   "aliases": [
+    "trip-hop"
+   ],
+   "parents": [
+    "F16",
+    "F24"
+   ]
+  },
+  {
+   "qid": "F24",
+   "label_en": "hip hop",
+   "label_es": "hip hop",
+   "aliases": [
+    "hip-hop",
+    "rap"
+   ],
+   "parents": []
+  },
+  {
+   "qid": "F25",
+   "label_en": "trap music",
+   "label_es": "trap",
+   "aliases": [
+    "trap"
+   ],
+   "parents": [
+    "F24"
+   ]
+  },
+  {
+   "qid": "F26",
+   "label_en": "alternative hip hop",
+   "label_es": "hip hop alternativo",
+   "aliases": [
+    "underground hip-hop"
+   ],
+   "parents": [
+    "F24"
+   ]
+  },
+  {
+   "qid": "F27",
+   "label_en": "jazz",
+   "label_es": "jazz",
+   "aliases": [],
+   "parents": []
+  },
+  {
+   "qid": "F28",
+   "label_en": "jazz fusion",
+   "label_es": "jazz fusión",
+   "aliases": [
+    "fusion"
+   ],
+   "parents": [
+    "F27",
+    "F01"
+   ]
+  },
+  {
+   "qid": "F29",
+   "label_en": "bebop",
+   "label_es": "bebop",
+   "aliases": [
+    "bop"
+   ],
+   "parents": [
+    "F27"
+   ]
+  },
+  {
+   "qid": "F30",
+   "label_en": "folk music",
+   "label_es": "música folk",
+   "aliases": [
+    "folk"
+   ],
+   "parents": []
+  },
+  {
+   "qid": "F31",
+   "label_en": "indie folk",
+   "label_es": "folk independiente",
+   "aliases": [],
+   "parents": [
+    "F30",
+    "F03"
+   ]
+  },
+  {
+   "qid": "F32",
+   "label_en": "folk rock",
+   "label_es": "folk rock",
+   "aliases": [],
+   "parents": [
+    "F30",
+    "F01"
+   ]
+  },
+  {
+   "qid": "F33",
+   "label_en": "pop music",
+   "label_es": "pop",
+   "aliases": [
+    "pop"
+   ],
+   "parents": []
+  },
+  {
+   "qid": "F34",
+   "label_en": "indie pop",
+   "label_es": "pop independiente",
+   "aliases": [],
+   "parents": [
+    "F33",
+    "F03"
+   ]
+  },
+  {
+   "qid": "F35",
+   "label_en": "ethereal wave",
+   "label_es": "ethereal wave",
+   "aliases": [
+    "ethereal"
+   ],
+   "parents": [
+    "F04",
+    "F15"
+   ]
+  },
+  {
+   "qid": "F36",
+   "label_en": "noise pop",
+   "label_es": "noise pop",
+   "aliases": [],
+   "parents": [
+    "F05",
+    "F07"
+   ]
+  }
+ ],
+ "manual_mapping": [
+  {
+   "tag": "sadcore",
+   "qid": "F06"
+  },
+  {
+   "tag": "4ad",
+   "qid": "F04"
+  },
+  {
+   "tag": "chillwave",
+   "qid": "F34"
+  }
+ ]
+}

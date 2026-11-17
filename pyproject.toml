@@ -1,0 +1,116 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sonarmatch"
+version = "0.1.0"
+description = "Recomendador híbrido de artistas: ontología + reglas + Personalized PageRank + TF-IDF, con explicaciones contrafactuales."
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [{ name = "Tomás Quiceno" }, { name = "Sara Arteaga" }]
+dependencies = [
+    "pandas>=2.1",
+    "numpy>=1.26",
+    "scipy>=1.11",
+    "networkx>=3.2",
+    "scikit-learn>=1.4",
+    "requests>=2.31",
+    "rapidfuzz>=3.6",
+    "streamlit>=1.36",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8",
+    "pytest-cov>=5",
+    "responses>=0.25",
+    "ruff>=0.6",
+    "mypy>=1.11",
+    "import-linter>=2.1",
+    "types-requests",
+]
+
+[tool.setuptools.packages.find]
+include = ["sonarmatch*"]
+
+# --------------------------------------------------------------------- ruff
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+extend-exclude = ["data", "reports", "docs"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM", "N", "S", "C90", "PL", "RUF", "PT"]
+
+[tool.ruff.lint.mccabe]
+max-complexity = 10
+
+[tool.ruff.lint.pylint]
+max-args = 8
+
+[tool.ruff.lint.per-file-ignores]
+# En tests: assert es la forma idiomática de pytest y los números mágicos son datos esperados.
+"tests/**" = ["S101", "PLR2004", "S311"]
+# El nombre ErrorEntradaInvalida lo fija el contrato backend-frontend (docs/CONTRATO.md).
+"sonarmatch/ports/inbound.py" = ["N818"]
+
+# --------------------------------------------------------------------- mypy
+[tool.mypy]
+python_version = "3.11"
+strict = true
+packages = ["sonarmatch"]
+
+# Librerías sin anotaciones de tipos: se ignoran por módulo, nunca globalmente.
+[[tool.mypy.overrides]]
+module = ["scipy", "scipy.*", "sklearn", "sklearn.*", "networkx", "networkx.*"]
+ignore_missing_imports = true
+
+# --------------------------------------------------------------------- pytest
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = ["slow: pruebas lentas (benchmarks); se ejecutan también en CI"]
+addopts = "-ra"
+
+# --------------------------------------------------------------------- coverage
+[tool.coverage.run]
+branch = true
+source = ["sonarmatch"]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+exclude_also = [
+    'if __name__ == .__main__.:',
+    'class .*\(Protocol\):',
+]
+
+# --------------------------------------------------------------------- import-linter
+[tool.importlinter]
+root_packages = ["sonarmatch"]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "El dominio no depende de puertos, aplicación ni adaptadores"
+type = "forbidden"
+source_modules = ["sonarmatch.domain"]
+forbidden_modules = ["sonarmatch.ports", "sonarmatch.application", "sonarmatch.adapters", "sonarmatch.bootstrap", "sonarmatch.ingestion", "sonarmatch.evaluation"]
+
+[[tool.importlinter.contracts]]
+name = "El dominio no usa infraestructura (streamlit, requests, sqlite3)"
+type = "forbidden"
+source_modules = ["sonarmatch.domain"]
+forbidden_modules = ["streamlit", "requests", "sqlite3"]
+
+[[tool.importlinter.contracts]]
+name = "La aplicación no depende de adaptadores"
+type = "forbidden"
+source_modules = ["sonarmatch.application"]
+forbidden_modules = ["sonarmatch.adapters", "sonarmatch.bootstrap"]
+
+[[tool.importlinter.contracts]]
+name = "La interfaz solo habla con el contrato (ports.inbound, bootstrap, testing.fakes)"
+type = "forbidden"
+source_modules = ["sonarmatch.adapters.inbound.streamlit_app", "sonarmatch.adapters.inbound.ui"]
+forbidden_modules = ["sonarmatch.domain", "sonarmatch.application", "sonarmatch.adapters.outbound"]
+allow_indirect_imports = true
