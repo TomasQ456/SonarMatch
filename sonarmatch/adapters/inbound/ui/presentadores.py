@@ -162,7 +162,7 @@ def formatear_efecto_contrafactual(efecto: EfectoContrafactual) -> str:
         return "Sin tus amigos"
     if efecto.tipo == "amigo":
         return f"Sin el amigo {efecto.artista_usuario}"
-    return efecto.artista_usuario
+    return f"Sin {efecto.artista_usuario}"
 
 
 def filas_tabla_contrafactual(
@@ -181,7 +181,7 @@ def filas_tabla_contrafactual(
         )
         filas.append(
             {
-                "Artista de tu lista": formatear_efecto_contrafactual(efecto),
+                "Qué se quita": formatear_efecto_contrafactual(efecto),
                 "Posición original": f"#{efecto.posicion_original}",
                 "Posición sin artista": pos_sin,
                 "Cambio": f"#{efecto.posicion_original} → {pos_sin}",

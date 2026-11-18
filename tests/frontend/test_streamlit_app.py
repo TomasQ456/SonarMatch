@@ -272,8 +272,9 @@ def test_contrafactual_bajo_demanda_y_cacheado(monkeypatch: MonkeyPatch) -> None
     assert explicador.llamadas_contrafactual == [1000]
     assert len(at.table) == 1
     texto_tabla = at.table[0].value.to_string()
+    assert "Qué se quita" in texto_tabla
     assert "fuera de la lista" in texto_tabla
-    assert "Beach House" in texto_tabla
+    assert "Sin Beach House" in texto_tabla
     assert any("Sin Beach House, Wild Nothing saldría de la lista" in m.value for m in at.markdown)
 
     # Al volver a presionar o interactuar, usa el caché en session_state sin rellamar al puerto

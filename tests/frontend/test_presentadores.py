@@ -171,25 +171,25 @@ def test_filas_tabla_contrafactual() -> None:
             tipo="amigo",
         ),
     )
-    assert formatear_efecto_contrafactual(efectos[0]) == "Beach House"
+    assert formatear_efecto_contrafactual(efectos[0]) == "Sin Beach House"
     assert formatear_efecto_contrafactual(efectos[2]) == "Sin tus amigos"
     assert formatear_efecto_contrafactual(efectos[3]) == "Sin el amigo ana_m"
 
     filas = filas_tabla_contrafactual(efectos)
     assert len(filas) == 4
-    assert filas[0]["Artista de tu lista"] == "Beach House"
+    assert filas[0]["Qué se quita"] == "Sin Beach House"
     assert filas[0]["Posición original"] == "#1"
     assert filas[0]["Posición sin artista"] == "fuera de la lista"
     assert filas[0]["Cambio"] == "#1 → fuera de la lista"
     assert filas[0]["Puntaje sin artista"] == "—"
 
-    assert filas[1]["Artista de tu lista"] == "Cocteau Twins"
+    assert filas[1]["Qué se quita"] == "Sin Cocteau Twins"
     assert filas[1]["Posición sin artista"] == "#3"
     assert filas[1]["Cambio"] == "#1 → #3"
     assert filas[1]["Puntaje sin artista"] == "0.8123"
 
-    assert filas[2]["Artista de tu lista"] == "Sin tus amigos"
-    assert filas[3]["Artista de tu lista"] == "Sin el amigo ana_m"
+    assert filas[2]["Qué se quita"] == "Sin tus amigos"
+    assert filas[3]["Qué se quita"] == "Sin el amigo ana_m"
 
 
 def test_son_parametros_iguales_y_resolver() -> None:
