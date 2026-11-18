@@ -6,6 +6,10 @@ columnas de PPR ya calculadas (por linealidad, PPR del perfil reducido = Σ_{j�
 cada columna no depende de las demás). Como es literalmente la misma ejecución, la posición
 obtenida es exacta por construcción.
 
+Contrafactuales sociales (si hay amigos activos): "sin tus amigos" es la misma consulta con
+β = 0 y "sin el amigo X" la misma consulta sin X; las columnas de los amigos salen del caché del
+motor, así que no se recalcula PPR.
+
 Posición: en la lista final (1..n) o, si quedó fuera, en el orden extendido con el resto del
 orden MMR de la estrategia principal; None si ni siquiera es candidato.
 """
@@ -16,6 +20,7 @@ from typing import Literal
 
 import numpy as np
 
+from sonarmatch.domain.models import ContextoSocial
 from sonarmatch.domain.pipeline import MotorRecomendacion, ResultadoConsulta
 from sonarmatch.domain.profile import perfil_sin
 from sonarmatch.domain.razonamiento import OpcionesMotor, Pesos
@@ -23,14 +28,17 @@ from sonarmatch.domain.strategies.graph_strategy import TrazaGrafo
 from sonarmatch.domain.textos import normalizar_nombre
 
 FUERA = 10**6  # posición ficticia para ordenar "fuera de los candidatos"
+TODOS_TUS_AMIGOS = "todos tus amigos"
+TipoEfecto = Literal["artista", "amigo", "amigos"]
 
 
 @dataclass(frozen=True)
 class Efecto:
-    artista_usuario: str
+    artista_usuario: str  # nombre del artista, apodo del amigo o TODOS_TUS_AMIGOS
     posicion_original: int
     posicion_sin_artista: int | None
     puntaje_sin_artista: float | None
+    tipo: TipoEfecto = "artista"
 
     @property
     def impacto(self) -> int:
@@ -46,7 +54,9 @@ class Contrafactuales:
     original: ResultadoConsulta
     parametros: Pesos | None
     opciones: OpcionesMotor | None
+    social: ContextoSocial | None = None
     _sin: dict[int, ResultadoConsulta] | None = None
+    _sin_amigos: dict[tuple[TipoEfecto, str], ResultadoConsulta] | None = None
 
     def ejecuciones(self) -> dict[int, ResultadoConsulta]:
         if self._sin is None:
@@ -59,10 +69,33 @@ class Contrafactuales:
                     self.opciones,
                     ppr=np.delete(ppr, i, axis=1),
                     explicar=False,
+                    social=self.social,
                 )
                 for i in range(len(perfil.indices))
             }
         return self._sin
+
+    def ejecuciones_sociales(self) -> dict[tuple[TipoEfecto, str], ResultadoConsulta]:
+        """ "Sin tus amigos" (β = 0) y "sin el amigo X"; vacío si no hay amigos activos."""
+        if self._sin_amigos is None:
+            self._sin_amigos = {}
+            sociales = self.original.perfil.sociales
+            if sociales is not None:
+                self._sin_amigos[("amigos", TODOS_TUS_AMIGOS)] = self._correr(None)
+                for apodo in sociales.vectores_amigo:
+                    self._sin_amigos[("amigo", apodo)] = self._correr(sociales.contexto.sin(apodo))
+        return self._sin_amigos
+
+    def _correr(self, social: ContextoSocial | None) -> ResultadoConsulta:
+        """Misma consulta (mismo perfil y columnas propias) con otro contexto social."""
+        return self.motor.recomendar(
+            self.original.perfil.perfil,
+            self.parametros,
+            self.opciones,
+            ppr=self.original.perfil.ppr,
+            explicar=False,
+            social=social,
+        )
 
     def efectos(self, indice: int) -> list[Efecto]:
         """Efecto de quitar cada artista del usuario sobre la recomendación ``indice``."""
@@ -79,6 +112,10 @@ class Contrafactuales:
             )
             for i, res in self.ejecuciones().items()
         ]
+        efectos += [
+            Efecto(nombre, original, res.posicion(indice), puntaje_en(res, indice), tipo)
+            for (tipo, nombre), res in self.ejecuciones_sociales().items()
+        ]
         return sorted(efectos, key=lambda e: (-abs(e.impacto), -e.impacto, e.artista_usuario))
 
 
@@ -91,18 +128,29 @@ def puntaje_en(res: ResultadoConsulta, indice: int) -> float | None:
     return None
 
 
+def sujeto(e: Efecto) -> str:
+    """ "Sin <sujeto>": el artista, "tu amigo X" o "tus amigos"."""
+    if e.tipo == "amigos":
+        return "tus amigos"
+    if e.tipo == "amigo":
+        return f"tu amigo {e.artista_usuario}"
+    return e.artista_usuario
+
+
 def resumen_efectos(nombre: str, efectos: Sequence[Efecto]) -> str:
     if not efectos or all(e.impacto == 0 for e in efectos):
-        return f"Quitar cualquiera de tus artistas no cambiaría la posición de {nombre}."
+        hay_amigos = any(e.tipo != "artista" for e in efectos)
+        quien = "tus artistas ni tus amigos" if hay_amigos else "tus artistas"
+        return f"Quitar cualquiera de {quien} no cambiaría la posición de {nombre}."
     e = efectos[0]
     if e.posicion_sin_artista is None:
         return (
-            f"Sin {e.artista_usuario}, {nombre} dejaría de ser candidato "
+            f"Sin {sujeto(e)}, {nombre} dejaría de ser candidato "
             f"(hoy está en el puesto {e.posicion_original})."
         )
     verbo = "bajaría" if e.impacto > 0 else "subiría"
     return (
-        f"Sin {e.artista_usuario}, {nombre} {verbo} del puesto {e.posicion_original} "
+        f"Sin {sujeto(e)}, {nombre} {verbo} del puesto {e.posicion_original} "
         f"al {e.posicion_sin_artista}."
     )
 
@@ -112,6 +160,7 @@ Motivo = Literal[
     "ya_en_entrada",
     "no_en_catalogo",
     "no_conectado",
+    "no_conectado_ni_por_amigos",
     "descartado_por_regla",
     "puntaje_insuficiente",
     "desplazado_por_diversidad",
@@ -152,6 +201,14 @@ def diagnosticar(
         if r.indice == i:
             raise YaRecomendadoError(f"{nombre} sí fue recomendado (puesto {k}).")
     traza = res.traza
+    if (traza is None or i not in traza.candidatos) and res.perfil.sociales is not None:
+        return _diag(
+            nombre,
+            "no_conectado_ni_por_amigos",
+            f"{nombre} no está entre los {motor.config.top_k_ppr} artistas más conectados en el "
+            "grafo de similitud (PPR) ni con tus artistas ni con los de tus amigos, ni lo aportó "
+            "la exploración de géneros (R2 o R7).",
+        )
     if traza is None or i not in traza.candidatos:
         return _diag(
             nombre,

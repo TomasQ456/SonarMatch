@@ -7,7 +7,15 @@ import pytest
 
 from sonarmatch.domain.counterfactual import Contrafactuales
 from sonarmatch.domain.indice import IndiceCatalogo
-from sonarmatch.domain.models import Artista, Catalogo, EntradaPerfil, Genero, MapeoEtiqueta
+from sonarmatch.domain.models import (
+    Artista,
+    Catalogo,
+    ContextoSocial,
+    EntradaPerfil,
+    Genero,
+    MapeoEtiqueta,
+    PerfilAmigo,
+)
 from sonarmatch.domain.pipeline import MotorRecomendacion
 
 N, GRADO, N_ETIQUETAS, N_GENEROS = 5000, 25, 400, 120
@@ -63,3 +71,34 @@ def test_consulta_y_contrafactual_dentro_del_presupuesto() -> None:
         Contrafactuales(motor, res, None, None).efectos(res.recomendaciones[0].indice)
         cf_s = time.perf_counter() - inicio
         assert cf_s < 1.5, f"contrafactual {consulta}: {cf_s:.2f} s"
+
+
+@pytest.mark.slow
+def test_consulta_y_contrafactual_con_amigos_dentro_del_presupuesto() -> None:
+    """20 artistas propios y 5 amigos de 20 artistas cada uno (hasta 120 semillas)."""
+    motor = MotorRecomendacion(IndiceCatalogo.construir(catalogo_sintetico()))
+    rng = np.random.default_rng(2)
+
+    def perfil_al_azar() -> list[EntradaPerfil]:
+        return [
+            EntradaPerfil(f"Artista {i}", float(1 + k % 5))
+            for k, i in enumerate(rng.choice(N, size=20, replace=False))
+        ]
+
+    for consulta in range(3):
+        social = ContextoSocial(
+            tuple(PerfilAmigo(f"amigo{k}", motor.perfil(perfil_al_azar())) for k in range(5)),
+            0.25,
+        )
+        inicio = time.perf_counter()
+        res = motor.recomendar(motor.perfil(perfil_al_azar()), social=social)
+        consulta_s = time.perf_counter() - inicio
+        assert len(res.recomendaciones) == 10
+        assert consulta_s < 3.0, f"consulta social {consulta}: {consulta_s:.2f} s"
+        inicio = time.perf_counter()
+        efectos = Contrafactuales(motor, res, None, None, social).efectos(
+            res.recomendaciones[0].indice
+        )
+        cf_s = time.perf_counter() - inicio
+        assert len(efectos) == 20 + 1 + 5
+        assert cf_s < 1.5, f"contrafactual social {consulta}: {cf_s:.2f} s"

@@ -15,6 +15,7 @@ from sonarmatch.domain.profile import agregar_afinidades, perfil_generos_base, v
 from sonarmatch.domain.rules.catalog import FASE_PERFIL, REGLAS, ContextoReglas
 from sonarmatch.domain.rules.engine import BaseHechos, Disparo, Hecho, MotorReglas
 from sonarmatch.domain.scoring import Matriz
+from sonarmatch.domain.social import GrafoSocial, SemillasSociales, grafo_social
 
 PARAMETROS_PESO = ("a", "b", "c", "d")
 
@@ -73,6 +74,7 @@ class OpcionesMotor:
     usar_mmr: bool = True
     usar_respaldo: bool = True
     terminos: frozenset[str] = frozenset(TERMINOS)
+    sin_reglas: frozenset[str] = frozenset()  # ablación de reglas concretas (p. ej. {"R7"})
 
 
 @dataclass
@@ -88,6 +90,10 @@ class PerfilRazonado:
     pesos: Pesos  # efectivos (con ajustes de reglas si corresponde)
     pesos_usuario: bool
     opciones: OpcionesMotor
+    sociales: SemillasSociales | None = None  # None = sin amigos activos
+
+    def grafo(self) -> GrafoSocial:
+        return grafo_social(self.ppr, np.asarray(self.perfil.pesos), self.sociales)
 
     @property
     def entrada(self) -> frozenset[int]:
@@ -106,7 +112,13 @@ class PerfilRazonado:
         return mejores
 
 
-def hechos_iniciales(indice: IndiceCatalogo, perfil: PerfilUsuario, p_base: Vector) -> list[Hecho]:
+def hechos_iniciales(
+    indice: IndiceCatalogo,
+    perfil: PerfilUsuario,
+    p_base: Vector,
+    sociales: SemillasSociales | None = None,
+    theta7: float = 0.0,
+) -> list[Hecho]:
     hechos = [
         Hecho("peso_genero", (indice.generos[j],), float(p_base[j]))
         for j in np.flatnonzero(p_base > 0)
@@ -114,6 +126,13 @@ def hechos_iniciales(indice: IndiceCatalogo, perfil: PerfilUsuario, p_base: Vect
     if perfil.indices:
         mediana = float(np.median(indice.oyentes[list(perfil.indices)]))
         hechos.append(Hecho("mediana_oyentes_perfil", (mediana,)))
+    if sociales is not None:  # solo amigos con consentimiento (el dominio no recibe otros)
+        for amigo in sociales.contexto.amigos:
+            p_amigo = perfil_generos_base(indice, amigo.perfil)
+            hechos += [
+                Hecho("peso_genero_amigo", (amigo.apodo, indice.generos[j]), float(p_amigo[j]))
+                for j in np.flatnonzero(p_amigo >= max(theta7, 1e-12))
+            ]
     return hechos
 
 
@@ -124,14 +143,16 @@ def razonar_perfil(
     ppr: Matriz,
     parametros: Pesos | None,
     opciones: OpcionesMotor,
+    sociales: SemillasSociales | None = None,
 ) -> PerfilRazonado:
     vec = vector_perfil(indice, perfil)
     p_base = perfil_generos_base(indice, perfil)
     ctx = ContextoReglas(indice, cfg, p_base, vec, frozenset(perfil.indices))
-    base = BaseHechos(hechos_iniciales(indice, perfil, p_base))
+    base = BaseHechos(hechos_iniciales(indice, perfil, p_base, sociales, cfg.theta7_r7))
     for q in (cfg.percentil_nicho_r3, cfg.percentil_mainstream_r4):
         base.agregar(Hecho("percentil_oyentes", (q, indice.percentil_oyentes(q))))
-    motor = MotorReglas(REGLAS if opciones.usar_reglas else (), cfg.max_iteraciones_reglas)
+    reglas = tuple(r for r in REGLAS if r.id not in opciones.sin_reglas)
+    motor = MotorReglas(reglas if opciones.usar_reglas else (), cfg.max_iteraciones_reglas)
     motor.ejecutar_fase(base, ctx, FASE_PERFIL)
     afinidades = {
         indice.pos_genero[str(h.args[0])]: h.confianza
@@ -157,4 +178,5 @@ def razonar_perfil(
         pesos=pesos,
         pesos_usuario=parametros is not None,
         opciones=opciones,
+        sociales=sociales,
     )

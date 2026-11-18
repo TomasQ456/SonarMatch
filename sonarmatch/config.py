@@ -23,6 +23,7 @@ class ConfigMotor:
     ppr_tolerancia: float = 1e-6
     ppr_max_iter: int = 100
     top_k_ppr: int = 200  # candidatos por PPR
+    max_columnas_cache: int = 2000  # columnas de PPR cacheadas por artista semilla
 
     # --- Resultado ---
     n_recomendaciones: int = 10

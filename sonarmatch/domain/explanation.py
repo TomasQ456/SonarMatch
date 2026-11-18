@@ -4,7 +4,9 @@
   PPR). En las estrategias de respaldo, los de mayor w_i · cos(tfidf_i, tfidf_c).
 - Etiquetas clave: mayor producto término a término perfil ⊙ tfidf(c).
 - Cadena de inferencia: los disparos de reglas que influyeron (ajustes globales R3/R4/R6,
-  procedencia por R2 con sus R1, y las afinidades R1 que pesan en S_onto del candidato).
+  procedencia por R2 (con sus R1) o R7, y las afinidades R1 que pesan en S_onto del candidato).
+- Amigos de origen: los de mayor parte en s_social (exacto, ver domain/social.py). El dominio
+  solo recibe amigos que comparten sus gustos, así que nunca nombra a otros.
 """
 
 from dataclasses import dataclass
@@ -64,6 +66,13 @@ class Explicador:
         orden = [int(j) for j in np.lexsort((np.arange(len(prod)), -prod)) if prod[j] > 0]
         return tuple(self.indice.vocabulario[j] for j in orden[: self.config.n_etiquetas_clave])
 
+    def amigos_origen(self, rec: Recomendacion, traza: TrazaGrafo | None) -> tuple[str, ...]:
+        if rec.estrategia != "grafo" or traza is None:
+            return ()
+        partes = traza.aportes_amigos.get(rec.indice, {})
+        orden = sorted((a for a, v in partes.items() if v > 0), key=lambda a: (-partes[a], a))
+        return tuple(orden[: self.config.n_amigos_origen])
+
     def disparos(
         self, rec: Recomendacion, pr: PerfilRazonado, traza: TrazaGrafo | None
     ) -> list[Disparo]:
@@ -90,13 +99,14 @@ class Explicador:
         motivo_respaldo: str | None = None,
     ) -> Explicacion:
         origen = self.artistas_origen(rec, pr)
+        amigos = self.amigos_origen(rec, traza)
         etiquetas = self.etiquetas_clave(rec, pr)
         disparos = self.disparos(rec, pr, traza)
         cadena = list(pr.motor.redactar(disparos, pr.contexto))
         if pr.pesos_usuario and rec.estrategia == "grafo":
             cadena.append(NOTA_PARAMETROS)
         if rec.estrategia == "grafo":
-            texto = self._texto_grafo(rec, pr, origen, etiquetas, disparos)
+            texto = self._texto_grafo(rec, pr, origen, etiquetas, disparos, amigos)
         else:
             texto = self._texto_respaldo(rec, pr, origen, etiquetas, motivo_respaldo)
         return Explicacion(
@@ -106,6 +116,7 @@ class Explicador:
             estrategia=rec.estrategia,
             cadena_inferencia=tuple(cadena),
             texto=texto,
+            amigos_origen=amigos,
         )
 
     def _texto_grafo(
@@ -115,6 +126,7 @@ class Explicador:
         origen: tuple[str, ...],
         etiquetas: tuple[str, ...],
         disparos: list[Disparo],
+        amigos: tuple[str, ...] = (),
     ) -> str:
         partes: list[str] = []
         aporte_grafo = rec.aportes.get("s_grafo", 0.0)
@@ -126,7 +138,13 @@ class Explicador:
         if not partes:
             partes.append("su combinación de etiquetas, conexiones y géneros se acerca a tu perfil")
         frases = ["Recomendado porque " + " y ".join(partes) + "."]
+        social = rec.aportes.get("s_social", 0.0)
+        if amigos and social > 0 and rec.puntaje > 0:
+            pct = round(100 * social / rec.puntaje)
+            if pct >= 1:
+                frases.append(f"El {pct} % viene de lo que escuchan {lista_natural(amigos)}.")
         frases += self._narrativa_r2(disparos)
+        frases += self._narrativa_r7(disparos)
         if self.indice.p_nov[rec.indice] >= self.config.umbral_poco_conocido:
             frases.append("Es un artista poco conocido.")
         if not pr.pesos_usuario:
@@ -151,6 +169,17 @@ class Explicador:
                 f"(R1), así que exploré {hijo} (R2), y este artista es de {hijo}."
             ]
         return [f"Exploré {hijo} (R2), y este artista es de {hijo}."]
+
+    def _narrativa_r7(self, disparos: list[Disparo]) -> list[str]:
+        r7 = [d for d in disparos if d.regla_id == "R7"]
+        if not r7:
+            return []
+        genero = self.indice.ontologia.nombre(str(r7[-1].coincidencia.ligaduras[0]))
+        amigos = [str(p.args[0]) for p in r7[-1].coincidencia.premisas]
+        return [
+            f"Tus amigos {lista_natural(amigos)} escuchan {genero}, así que exploré {genero} "
+            f"(R7), y este artista es de {genero}."
+        ]
 
     def _texto_respaldo(
         self,
