@@ -166,8 +166,8 @@ def dibujar_mi_perfil(perfiles: GestionarPerfiles) -> tuple[str, bool, bool]:
     """Dibuja la sección 'Mi perfil' y retorna (apodo, comparte_gustos, guardar_click)."""
     st.subheader("Mi perfil")
     st.caption(
-        "Aviso: no hay contraseñas; el apodo te identifica y cualquiera que conozca tu apodo "
-        "puede cargar o reemplazar tu perfil."
+        "No hay contraseñas: el apodo te identifica y cualquiera que lo conozca "
+        "puede reemplazar tu perfil."
     )
     st.session_state.setdefault("apodo_usuario", "")
     apodo = st.text_input(
@@ -186,7 +186,9 @@ def dibujar_mi_perfil(perfiles: GestionarPerfiles) -> tuple[str, bool, bool]:
     )
     st.caption(
         "Tus artistas se usan para recomendar a tus amigos y tu apodo puede aparecer en sus "
-        "explicaciones. Si no marcas la casilla, tus gustos no se usan ni se te nombra."
+        "explicaciones. Si no marcas la casilla, tus gustos no se usan ni se te nombra. "
+        "Si compartes, quien conozca tu apodo también puede cargar tus artistas; si no, "
+        "tu perfil no se puede recargar por apodo."
     )
 
     col_cargar, col_guardar = st.columns(2)

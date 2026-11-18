@@ -78,8 +78,17 @@ def test_carga_inicial_sin_errores(monkeypatch: MonkeyPatch) -> None:
     assert at.slider(key="param_beta").value == pytest.approx(PARAMETROS_FALSOS.beta)
     assert at.checkbox(key="comparte_gustos").value is False
     textos_cap = "\n".join(c.value for c in at.caption)
-    assert "no hay contraseñas" in textos_cap.lower()
-    assert "tus artistas se usan para recomendar a tus amigos" in textos_cap.lower()
+    assert (
+        "No hay contraseñas: el apodo te identifica y cualquiera que lo conozca "
+        "puede reemplazar tu perfil."
+    ) in textos_cap
+    assert "cargar o reemplazar tu perfil" not in textos_cap
+    assert "Tus artistas se usan para recomendar a tus amigos" in textos_cap
+    assert "Si no marcas la casilla, tus gustos no se usan ni se te nombra." in textos_cap
+    assert (
+        "Si compartes, quien conozca tu apodo también puede cargar tus artistas; si no, "
+        "tu perfil no se puede recargar por apodo."
+    ) in textos_cap
 
 
 @pytest.mark.parametrize(
