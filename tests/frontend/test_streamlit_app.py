@@ -12,10 +12,13 @@ from streamlit.testing.v1 import AppTest
 from sonarmatch.adapters.inbound import streamlit_app
 from sonarmatch.bootstrap import Servicios
 from sonarmatch.ports.inbound import (
+    AmigoDTO,
     ContrafactualDTO,
+    EntradaArtista,
     ErrorEntradaInvalida,
     Estrategia,
     MotivoNo,
+    PerfilDTO,
     PorQueNoDTO,
     RespuestaRecomendacion,
     SolicitudRecomendacion,
@@ -72,6 +75,11 @@ def test_carga_inicial_sin_errores(monkeypatch: MonkeyPatch) -> None:
     assert at.slider(key="param_c").value == pytest.approx(PARAMETROS_FALSOS.c)
     assert at.slider(key="param_d").value == pytest.approx(PARAMETROS_FALSOS.d)
     assert at.slider(key="param_lambda").value == pytest.approx(PARAMETROS_FALSOS.lambda_mmr)
+    assert at.slider(key="param_beta").value == pytest.approx(PARAMETROS_FALSOS.beta)
+    assert at.checkbox(key="comparte_gustos").value is False
+    textos_cap = "\n".join(c.value for c in at.caption)
+    assert "no hay contraseñas" in textos_cap.lower()
+    assert "tus artistas se usan para recomendar a tus amigos" in textos_cap.lower()
 
 
 @pytest.mark.parametrize(
@@ -333,6 +341,28 @@ class _FeedbackError:
         raise self.error
 
 
+@dataclass
+class _PerfilesError:
+    error: Exception
+
+    def guardar_perfil(
+        self, apodo: str, artistas: tuple[EntradaArtista, ...], comparte_gustos: bool
+    ) -> PerfilDTO:
+        raise self.error
+
+    def obtener_perfil(self, apodo: str) -> PerfilDTO:
+        raise self.error
+
+    def agregar_amigo(self, apodo: str, apodo_amigo: str) -> None:
+        raise self.error
+
+    def quitar_amigo(self, apodo: str, apodo_amigo: str) -> None:
+        raise self.error
+
+    def listar_amigos(self, apodo: str) -> tuple[AmigoDTO, ...]:
+        raise self.error
+
+
 def test_manejo_error_entrada_invalida(monkeypatch: MonkeyPatch) -> None:
     msg = "La solicitud contiene artistas duplicados."
     serv_err = Servicios(
@@ -380,19 +410,205 @@ def test_manejo_error_generico_sin_exponer_traceback(
     assert secreto not in at.error[0].value
     assert "Error inesperado al generar recomendaciones" in caplog.text
 
-    # Error genérico en contrafactual, por_que_no y feedback
+    # Error genérico en contrafactual, por_que_no, feedback y perfiles
     serv_parcial = Servicios(
         recomendar=RecomendadorFalso(),
         catalogo=CatalogoFalso(),
         explicar=_ExplicadorError(RuntimeError(secreto)),
         feedback=_FeedbackError(RuntimeError(secreto)),
+        perfiles=_PerfilesError(RuntimeError(secreto)),
     )
     at2, _ = _recomendar_base(monkeypatch, 5, servicios=serv_parcial)
     at2.button(key="voto_pos_1000").click().run()
     at2.button(key="btn_contrafactual_1000").click().run()
     at2.button(key="btn_por_que_no").click().run()
+    at2.text_input(key="apodo_usuario").set_value("demo").run()
+    at2.button(key="btn_cargar_perfil").click().run()
+    at2.button(key="btn_guardar_perfil").click().run()
+    at2.text_input(key="apodo_amigo_input").set_value("ana_m").run()
+    at2.button(key="btn_agregar_amigo").click().run()
     assert not at2.exception
     assert all(secreto not in e.value for e in at2.error)
+
+
+def test_guardar_y_cargar_perfil_y_consentimiento(monkeypatch: MonkeyPatch) -> None:
+    at, serv = _crear_apptest(monkeypatch)
+    assert at.checkbox(key="comparte_gustos").value is False
+    textos_cap = "\n".join(c.value for c in at.caption)
+    assert "Si no marcas la casilla, tus gustos no se usan ni se te nombra." in textos_cap
+
+    # Guardar nuevo perfil con artistas actuales, peso personalizado y consentimiento activo
+    seleccion = list(ENTRADA_FALSA[:6])
+    at.multiselect(key="artistas_seleccionados").set_value(seleccion).run()
+    at.slider(key=f"peso_{seleccion[0]}").set_value(4.5).run()
+    at.checkbox(key="comparte_gustos").set_value(True).run()
+    at.text_input(key="apodo_usuario").set_value("nuevo_usr").run()
+    at.button(key="btn_guardar_perfil").click().run()
+
+    assert not at.exception
+    assert any("Perfil «nuevo_usr» guardado correctamente." in s.value for s in at.success)
+    guardado = serv.perfiles.obtener_perfil("nuevo_usr")
+    assert guardado.comparte_gustos is True
+    assert guardado.artistas[0] == EntradaArtista(nombre=seleccion[0], peso=4.5)
+
+    # Cargar el perfil de ejemplo "solo" (sin consentimiento)
+    at.text_input(key="apodo_usuario").set_value("solo").run()
+    at.button(key="btn_cargar_perfil").click().run()
+    assert not at.exception
+    assert at.checkbox(key="comparte_gustos").value is False
+    assert at.multiselect(key="artistas_seleccionados").value == list(ENTRADA_FALSA[8:14])
+
+    # Volver a cargar "nuevo_usr" restaura artistas, pesos y consentimiento
+    at.text_input(key="apodo_usuario").set_value("nuevo_usr").run()
+    at.button(key="btn_cargar_perfil").click().run()
+    assert not at.exception
+    assert at.checkbox(key="comparte_gustos").value is True
+    assert at.multiselect(key="artistas_seleccionados").value == seleccion
+    assert at.slider(key=f"peso_{seleccion[0]}").value == pytest.approx(4.5)
+
+    # Errores de ErrorPerfil al cargar apodo inexistente o guardar apodo inválido
+    at.text_input(key="apodo_usuario").set_value("inexistente").run()
+    at.button(key="btn_cargar_perfil").click().run()
+    assert any("No existe un perfil con el apodo «inexistente»" in e.value for e in at.error)
+
+    at.text_input(key="apodo_usuario").set_value("a").run()
+    at.button(key="btn_guardar_perfil").click().run()
+    assert any("entre 3 y 30 caracteres" in e.value for e in at.error)
+
+
+def test_amigos_agregar_listar_quitar_y_errores(monkeypatch: MonkeyPatch) -> None:
+    at, _ = _crear_apptest(monkeypatch)
+    at.text_input(key="apodo_usuario").set_value("demo").run()
+    assert not at.exception
+
+    textos_md = "\n".join(m.value for m in at.markdown)
+    assert "**ana_m** — Comparte sus gustos" in textos_md
+    assert "**juanp** — Comparte sus gustos" in textos_md
+    assert "**luis_priv** — No comparte sus gustos" in textos_md
+    assert "no influye en tus recomendaciones" in textos_md
+    # Nunca se exponen los artistas de los amigos (ej. Metallica o Deftones de luis_priv)
+    assert "Metallica" not in textos_md
+    assert "Deftones" not in textos_md
+
+    # Agregar a "solo" como amigo
+    at.text_input(key="apodo_amigo_input").set_value("solo").run()
+    at.button(key="btn_agregar_amigo").click().run()
+    assert not at.exception
+    assert any("Se agregó a «solo» a tus amigos." in s.value for s in at.success)
+    assert "**solo** — No comparte sus gustos" in "\n".join(m.value for m in at.markdown)
+
+    # Quitar a "solo" desde el botón individual de la lista
+    at.button(key="btn_quitar_amigo_solo").click().run()
+    assert not at.exception
+    assert any("Se quitó a «solo» de tus amigos." in s.value for s in at.success)
+    assert "**solo**" not in "\n".join(m.value for m in at.markdown)
+
+    # Volver a agregar y quitar mediante el botón general "Quitar amigo"
+    at.text_input(key="apodo_amigo_input").set_value("solo").run()
+    at.button(key="btn_agregar_amigo").click().run()
+    at.button(key="btn_quitar_amigo").click().run()
+    assert "**solo**" not in "\n".join(m.value for m in at.markdown)
+
+    # Errores de ErrorPerfil: autoamistad, amistad duplicada, quitar no amigo y amigo inexistente
+    at.text_input(key="apodo_amigo_input").set_value("demo").run()
+    at.button(key="btn_agregar_amigo").click().run()
+    assert any("No puedes agregarte a ti mismo como amigo." in e.value for e in at.error)
+
+    at.text_input(key="apodo_amigo_input").set_value("ana_m").run()
+    at.button(key="btn_agregar_amigo").click().run()
+    assert any("«ana_m» ya está en tu lista de amigos." in e.value for e in at.error)
+
+    at.text_input(key="apodo_amigo_input").set_value("solo").run()
+    at.button(key="btn_quitar_amigo").click().run()
+    assert any("«solo» no está en tu lista de amigos." in e.value for e in at.error)
+
+    at.text_input(key="apodo_amigo_input").set_value("nadie").run()
+    at.button(key="btn_agregar_amigo").click().run()
+    assert any("No existe un perfil con el apodo «nadie»" in e.value for e in at.error)
+
+
+def test_aporte_social_visible_y_contrafactuales_amigos(monkeypatch: MonkeyPatch) -> None:
+    at, serv = _crear_apptest(monkeypatch)
+    recomendador = serv.recomendar
+    assert isinstance(recomendador, RecomendadorFalso)
+
+    at.text_input(key="apodo_usuario").set_value("demo").run()
+    at.button(key="btn_cargar_perfil").click().run()
+    at.button(key="btn_recomendar").click().run()
+    assert not at.exception
+
+    assert len(recomendador.llamadas) == 1
+    assert recomendador.llamadas[0].apodo == "demo"
+    assert recomendador.llamadas[0].parametros is None
+
+    respuesta = at.session_state["ultima_respuesta"]
+    assert isinstance(respuesta, RespuestaRecomendacion)
+    assert respuesta.recomendaciones[0].aportes["s_social"] > 0
+
+    textos_md = "\n".join(m.value for m in at.markdown)
+    assert "**Amigos origen:** ana_m, juanp" in textos_md
+    assert "R7: ana_m y juanp escuchan post-rock" in textos_md
+    # luis_priv no comparte gustos y nunca debe aparecer en recomendaciones ni explicaciones
+    for rec in respuesta.recomendaciones:
+        assert "luis_priv" not in rec.amigos_origen
+        assert "luis_priv" not in rec.explicacion
+        assert all("luis_priv" not in paso for paso in rec.cadena_inferencia)
+
+    # Contrafactual incluye "Sin tus amigos" y "Sin el amigo X"
+    at.button(key="btn_contrafactual_1000").click().run()
+    assert not at.exception
+    texto_tabla = at.table[0].value.to_string()
+    assert "Sin tus amigos" in texto_tabla
+    assert "Sin el amigo ana_m" in texto_tabla
+    assert "Sin el amigo juanp" in texto_tabla
+    assert "luis_priv" not in texto_tabla
+
+
+def test_comportamiento_con_beta_cero_sin_amigos_y_apodo_inexistente(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    # Con apodo="demo" pero beta=0: sin aporte social ni efectos de amigos
+    at, serv = _crear_apptest(monkeypatch)
+    recomendador = serv.recomendar
+    assert isinstance(recomendador, RecomendadorFalso)
+
+    at.text_input(key="apodo_usuario").set_value("demo").run()
+    at.button(key="btn_cargar_perfil").click().run()
+    at.slider(key="param_beta").set_value(0.0).run()
+    at.button(key="btn_recomendar").click().run()
+
+    assert not at.exception
+    solicitud_beta_cero = recomendador.llamadas[-1]
+    assert solicitud_beta_cero.apodo == "demo"
+    assert solicitud_beta_cero.parametros is not None
+    assert solicitud_beta_cero.parametros.beta == pytest.approx(0.0)
+
+    respuesta_beta_cero = at.session_state["ultima_respuesta"]
+    assert isinstance(respuesta_beta_cero, RespuestaRecomendacion)
+    assert all(r.aportes["s_social"] == 0.0 for r in respuesta_beta_cero.recomendaciones)
+    assert "**Amigos origen:**" not in "\n".join(m.value for m in at.markdown)
+
+    at.button(key="btn_contrafactual_1000").click().run()
+    texto_tabla = at.table[0].value.to_string()
+    assert "Sin tus amigos" not in texto_tabla
+    assert "Sin el amigo" not in texto_tabla
+
+    # Con apodo="solo" (sin amigos) y parámetros por defecto: sin aporte social
+    at.button(key="btn_restablecer_parametros").click().run()
+    at.text_input(key="apodo_usuario").set_value("solo").run()
+    at.button(key="btn_cargar_perfil").click().run()
+    assert any("Aún no tienes amigos en tu lista." in c.value for c in at.caption)
+    at.button(key="btn_recomendar").click().run()
+
+    assert not at.exception
+    assert recomendador.llamadas[-1].apodo == "solo"
+    assert recomendador.llamadas[-1].parametros is None
+    assert "**Amigos origen:**" not in "\n".join(m.value for m in at.markdown)
+
+    # Con apodo inexistente al recomendar: muestra ErrorPerfil
+    at.text_input(key="apodo_usuario").set_value("apodo_fantasma").run()
+    at.button(key="btn_recomendar").click().run()
+    assert any("No existe un perfil con el apodo «apodo_fantasma»" in e.value for e in at.error)
 
 
 def test_mensaje_claro_cuando_falta_base_de_datos(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:
