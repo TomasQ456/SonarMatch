@@ -92,6 +92,14 @@ def leer_hetrec(directorio: Path) -> list[tuple[str, str, float]]:
     return salida
 
 
+def artistas_mas_escuchados_hetrec(directorio: Path, n: int) -> list[str]:
+    """Los ``n`` artistas con más oyentes (usuarios distintos) en HetRec (semillas de ingesta)."""
+    oyentes: dict[str, int] = defaultdict(int)
+    for _, nombre, _ in leer_hetrec(directorio):
+        oyentes[nombre] += 1
+    return sorted(oyentes, key=lambda a: (-oyentes[a], a))[:n]
+
+
 def leer_amigos_hetrec(directorio: Path) -> dict[str, frozenset[str]]:
     """Amistades de ``user_friends.dat`` como relación simétrica y sin autorrelaciones."""
     amigos: dict[str, set[str]] = defaultdict(set)

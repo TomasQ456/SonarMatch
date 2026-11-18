@@ -11,6 +11,7 @@ from collections import Counter, OrderedDict
 from dataclasses import dataclass, field
 from typing import Literal
 
+from sonarmatch.application.perfiles import ServicioPerfiles
 from sonarmatch.application.validation import validar_solicitud
 from sonarmatch.domain.counterfactual import (
     Contrafactuales,
@@ -18,13 +19,14 @@ from sonarmatch.domain.counterfactual import (
     diagnosticar,
     resumen_efectos,
 )
-from sonarmatch.domain.models import EntradaPerfil, Recomendacion
+from sonarmatch.domain.models import ContextoSocial, EntradaPerfil, PerfilAmigo, Recomendacion
 from sonarmatch.domain.pipeline import MotorRecomendacion, ResultadoConsulta
 from sonarmatch.domain.razonamiento import Pesos
 from sonarmatch.ports.inbound import (
     ContrafactualDTO,
     EfectoContrafactual,
     ErrorEntradaInvalida,
+    ErrorPerfil,
     Estrategia,
     ParametrosMotor,
     PorQueNoDTO,
@@ -47,13 +49,14 @@ def a_dto(r: Recomendacion) -> RecomendacionDTO:
         artista_id=r.artista_id,
         nombre=r.nombre,
         puntaje=min(1.0, max(0.0, r.puntaje)),
-        aportes={"s_social": 0.0, **r.aportes},
+        aportes=dict(r.aportes),
         explicacion=exp.texto if exp else "",
         artistas_origen=exp.artistas_origen if exp else (),
         etiquetas_clave=exp.etiquetas_clave if exp else (),
         estrategia=r.estrategia,
         oyentes=r.oyentes,
         cadena_inferencia=exp.cadena_inferencia if exp else (),
+        amigos_origen=exp.amigos_origen if exp else (),
     )
 
 
@@ -69,7 +72,8 @@ class _Entrada:
 class ServicioRecomendacion:
     motor: MotorRecomendacion
     evaluaciones: RepositorioEvaluaciones
-    _cache: OrderedDict[SolicitudRecomendacion, _Entrada] = field(default_factory=OrderedDict)
+    perfiles: ServicioPerfiles | None = None
+    _cache: OrderedDict[tuple[object, ...], _Entrada] = field(default_factory=OrderedDict)
     _lock: threading.Lock = field(default_factory=threading.Lock)
 
     # --------------------------------------------------------- RecomendarArtistas
@@ -83,20 +87,38 @@ class ServicioRecomendacion:
             latencia_ms=entrada.latencia_ms,
         )
 
+    def contexto_social(self, solicitud: SolicitudRecomendacion) -> ContextoSocial | None:
+        """Amigos que comparten gustos (el consentimiento se aplica aquí) y β de la solicitud."""
+        if solicitud.apodo is None:
+            return None
+        if self.perfiles is None:
+            raise ErrorPerfil("La gestión de perfiles no está disponible en esta instalación.")
+        amigos = self.perfiles.amigos_que_comparten(solicitud.apodo)
+        p = solicitud.parametros
+        beta = p.beta if p is not None else self.motor.config.beta
+        return ContextoSocial(
+            tuple(PerfilAmigo(a.apodo, self.motor.perfil(a.artistas)) for a in amigos), beta
+        )
+
     def _consultar(self, solicitud: SolicitudRecomendacion) -> _Entrada:
         validar_solicitud(solicitud)
+        social = self.contexto_social(solicitud)
+        # La clave incluye el contexto social: si un amigo cambia su perfil o su consentimiento,
+        # la consulta se recalcula.
+        clave = (solicitud.artistas, solicitud.parametros, social)
         with self._lock:
-            if solicitud in self._cache:
-                self._cache.move_to_end(solicitud)
-                return self._cache[solicitud]
+            if clave in self._cache:
+                self._cache.move_to_end(clave)
+                return self._cache[clave]
         inicio = time.perf_counter()
         perfil = self.motor.perfil([EntradaPerfil(e.nombre, e.peso) for e in solicitud.artistas])
         pesos = a_pesos(solicitud.parametros)
-        resultado = self.motor.recomendar(perfil, pesos)
+        resultado = self.motor.recomendar(perfil, pesos, social=social)
         latencia = (time.perf_counter() - inicio) * 1000
-        entrada = _Entrada(resultado, Contrafactuales(self.motor, resultado, pesos, None), latencia)
+        contrafactuales = Contrafactuales(self.motor, resultado, pesos, None, social)
+        entrada = _Entrada(resultado, contrafactuales, latencia)
         with self._lock:
-            self._cache[solicitud] = entrada
+            self._cache[clave] = entrada
             while len(self._cache) > TAMANO_CACHE:
                 self._cache.popitem(last=False)
         return entrada
@@ -130,6 +152,7 @@ class ServicioRecomendacion:
                     e.posicion_original,
                     e.posicion_sin_artista,
                     e.puntaje_sin_artista,
+                    e.tipo,
                 )
                 for e in efectos
             ),

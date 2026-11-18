@@ -56,6 +56,7 @@ class ConfigIngesta:
     por_etiqueta: int = 50
     similares_por_artista: int = 50
     etiquetas_semilla: tuple[str, ...] = ETIQUETAS_SEMILLA
+    semillas_extra: tuple[str, ...] = ()  # p. ej. los más escuchados de HetRec (van primero)
     usar_musicbrainz: bool = True
     umbral_difuso: float = 90.0
     mapeo_manual: Path = Path("data/mapeo_manual.csv")
@@ -96,7 +97,7 @@ class Ingesta:
     # ------------------------------------------------------------------ 1 y 2
     def semillas(self) -> list[str]:
         c = self.config
-        nombres: list[str] = []
+        nombres: list[str] = list(c.semillas_extra)
         for pagina in range(1, c.paginas_chart + 1):
             nombres += [a.nombre for a in self.fuente.top_artistas(pagina, c.por_pagina_chart)]
         for etiqueta in c.etiquetas_semilla:
@@ -237,12 +238,25 @@ def escribir_muestra(ruta: Path, filas: list[dict[str, str]]) -> None:
         escritor.writerows(filas)
 
 
-def ingerir_desde_entorno(ruta_db: Path, objetivo: int = 5000, musicbrainz: bool = True) -> int:
-    """Compone los clientes reales a partir de LASTFM_API_KEY y MB_USER_AGENT."""
+AGENTE_GENERICO = "SonarMatch/0.1 (prototipo academico)"
+
+
+def agente_http() -> str:
+    """MB_USER_AGENT si está definido; si no, un agente genérico sin datos de contacto."""
+    return os.environ.get("MB_USER_AGENT", "").strip() or AGENTE_GENERICO
+
+
+def ingerir_desde_entorno(
+    ruta_db: Path,
+    objetivo: int = 5000,
+    musicbrainz: bool = True,
+    semillas_extra: tuple[str, ...] = (),
+) -> int:
+    """Compone los clientes reales a partir de LASTFM_API_KEY (y MB_USER_AGENT, opcional)."""
     clave = os.environ.get("LASTFM_API_KEY", "").strip()
-    agente = os.environ.get("MB_USER_AGENT", "").strip()
-    if not clave or not agente:
-        log.error("Faltan LASTFM_API_KEY o MB_USER_AGENT (ver .env.example). Usa --fixture.")
+    agente = agente_http()
+    if not clave:
+        log.error("Falta LASTFM_API_KEY (ver .env.example). Sin clave, usa --fixture.")
         return 2
     ruta_db.parent.mkdir(parents=True, exist_ok=True)
     repo = RepositorioSQLite(ruta_db)
@@ -252,7 +266,9 @@ def ingerir_desde_entorno(ruta_db: Path, objetivo: int = 5000, musicbrainz: bool
         fuente=ClienteLastFM(clave, ClienteHTTP(0.25, agente), repo),
         ontologia=ClienteWikidata(ClienteHTTP(1.0, agente, timeout=120), repo),
         detalles=ClienteMusicBrainz(ClienteHTTP(INTERVALO_MB, agente), repo),
-        config=ConfigIngesta(objetivo=objetivo, usar_musicbrainz=musicbrainz),
+        config=ConfigIngesta(
+            objetivo=objetivo, usar_musicbrainz=musicbrainz, semillas_extra=semillas_extra
+        ),
     )
     resumen = ingesta.ejecutar()
     print(

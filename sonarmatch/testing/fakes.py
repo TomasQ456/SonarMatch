@@ -105,6 +105,7 @@ AMISTADES_FALSAS: tuple[tuple[str, str], ...] = (
 )
 _CADENA_R7 = "R7: ana_m y juanp escuchan post-rock → exploré post-rock"
 RECOMENDACIONES_SOCIALES = 3  # las primeras recomendaciones de grafo con aporte de amigos
+FACTOR_SOCIAL_FALSO = 1.4  # fracción social del término de grafo = β·1,4 (acotada a 1)
 MIN_AMIGOS_R7 = 2
 
 
@@ -199,10 +200,13 @@ def _recomendacion(
     sociales = (
         amigos[:2] if amigos and estrategia == "grafo" and i < RECOMENDACIONES_SOCIALES else ()
     )
-    aportes = _aportes(puntaje, p, p.beta * 1.4 if sociales else 0.0)
+    fraccion = min(1.0, p.beta * FACTOR_SOCIAL_FALSO) if sociales else 0.0
+    aportes = _aportes(puntaje, p, fraccion)
+    pct = round(100 * aportes["s_social"] / puntaje)
+    if pct < 1:  # como el motor real: no se nombra a amigos que no aportaron
+        sociales = ()
     texto_social = ""
     if sociales:
-        pct = round(100 * aportes["s_social"] / puntaje)
         texto_social = f" El {pct} % viene de lo que escuchan {' y '.join(sociales)}."
         if len(amigos) >= MIN_AMIGOS_R7 and i == 0:
             cadena = (*cadena, _CADENA_R7)

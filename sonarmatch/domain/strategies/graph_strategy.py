@@ -1,4 +1,9 @@
-"""Estrategia principal: candidatos por PPR (+ R2), descartes por R5, puntaje combinado y MMR."""
+"""Estrategia principal: candidatos por PPR (+ R2/R7), descartes por R5, puntaje combinado y MMR.
+
+Con amigos activos, el PPR es el del vector de semillas mezclado y el término de grafo se
+reparte entre s_grafo (propio) y s_social (amigos) según su contribución sin normalizar
+(ver domain/social.py).
+"""
 
 from dataclasses import dataclass, field
 from typing import Literal
@@ -8,11 +13,11 @@ import numpy as np
 from sonarmatch.config import ConfigMotor
 from sonarmatch.domain.diversity import DecisionMMR, mmr, similitudes
 from sonarmatch.domain.indice import IndiceCatalogo, Vector
-from sonarmatch.domain.models import TERMINOS, Recomendacion
+from sonarmatch.domain.models import CLAVES_APORTE, TERMINOS, Recomendacion
 from sonarmatch.domain.razonamiento import PerfilRazonado
 from sonarmatch.domain.rules.catalog import FASE_CANDIDATOS
 from sonarmatch.domain.rules.engine import Hecho
-from sonarmatch.domain.scoring import combinar, s_grafo, s_onto, s_tags
+from sonarmatch.domain.scoring import combinar, s_onto, s_tags
 from sonarmatch.domain.strategies.base import ResultadoEstrategia
 
 
@@ -28,6 +33,7 @@ class TrazaGrafo:
     terminos_crudos: dict[int, dict[str, float]]
     orden_mmr: list[int]  # orden completo producido por MMR
     decisiones_mmr: list[DecisionMMR] = field(default_factory=list)
+    aportes_amigos: dict[int, dict[str, float]] = field(default_factory=dict)  # parte de s_social
 
     def posicion_previa(self, i: int) -> int | None:
         return self.ranking_previo.index(i) + 1 if i in self.puntajes else None
@@ -65,7 +71,8 @@ class EstrategiaGrafo:
 
     def trazar(self, perfil: PerfilRazonado, excluir: frozenset[int]) -> TrazaGrafo:
         ix = self.indice
-        total, _ = s_grafo(perfil.ppr, np.asarray(perfil.perfil.pesos))
+        grafo = perfil.grafo()
+        total = grafo.total
         por_ppr = candidatos_ppr(total, self.config.top_k_ppr, excluir)
         origen: dict[int, set[str]] = {i: {"ppr"} for i in por_ppr}
         for i in perfil.candidatos_r2():
@@ -90,6 +97,16 @@ class EstrategiaGrafo:
             decisiones = mmr(puntaje[orden_local], sim, lam)
         orden_mmr = [ranking[d.elegido] for d in decisiones]
         pos = {int(i): k for k, i in enumerate(vivos)}
+        repartidos: dict[int, dict[str, float]] = {}
+        por_amigo: dict[int, dict[str, float]] = {}
+        for i, k in pos.items():
+            termino = float(aportes["s_grafo"][k])
+            social = termino * grafo.fraccion_social(i)
+            repartidos[i] = {t: float(aportes[t][k]) for t in TERMINOS}
+            repartidos[i].update(s_grafo=termino - social, s_social=social)
+            fracciones = grafo.fracciones_amigos(i)
+            if fracciones:
+                por_amigo[i] = {a: termino * f for a, f in fracciones.items()}
         return TrazaGrafo(
             candidatos=candidatos,
             origen=origen,
@@ -97,12 +114,13 @@ class EstrategiaGrafo:
             ranking_previo=ranking,
             puntajes={i: float(puntaje[k]) for i, k in pos.items()},
             crudos={i: float(crudo[k]) for i, k in pos.items()},
-            aportes={i: {t: float(aportes[t][k]) for t in TERMINOS} for i, k in pos.items()},
+            aportes={i: {t: repartidos[i][t] for t in CLAVES_APORTE} for i in pos},
             terminos_crudos={
                 i: {t: float(terminos[t][k]) for t in TERMINOS} for i, k in pos.items()
             },
             orden_mmr=orden_mmr,
             decisiones_mmr=decisiones,
+            aportes_amigos=por_amigo,
         )
 
     def _descartes(self, perfil: PerfilRazonado, candidatos: list[int]) -> dict[int, Hecho]:

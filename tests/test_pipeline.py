@@ -8,7 +8,7 @@ from juguete import catalogo_juguete
 
 from sonarmatch.config import ConfigMotor
 from sonarmatch.domain.indice import IndiceCatalogo
-from sonarmatch.domain.models import TERMINOS, Artista, Catalogo, EntradaPerfil
+from sonarmatch.domain.models import CLAVES_APORTE, Artista, Catalogo, EntradaPerfil
 from sonarmatch.domain.pipeline import MotorRecomendacion, ResultadoConsulta
 from sonarmatch.domain.razonamiento import OpcionesMotor, Pesos
 from sonarmatch.domain.strategies.popularity_strategy import etiquetas_dominantes
@@ -36,7 +36,8 @@ def test_diez_recomendaciones_sin_entrada_ni_duplicados(motor: MotorRecomendacio
 
 def test_aportes_suman_el_puntaje(motor: MotorRecomendacion) -> None:
     for r in recomendar(motor, SHOEGAZE).recomendaciones:
-        assert set(r.aportes) == set(TERMINOS)
+        assert set(r.aportes) == set(CLAVES_APORTE)
+        assert r.aportes["s_social"] == 0  # sin amigos
         assert sum(r.aportes.values()) == pytest.approx(r.puntaje)
         assert 0 <= r.puntaje <= 1
 
@@ -134,6 +135,9 @@ def test_grafo_desconectado_completa_con_respaldo_sin_duplicar(motor: MotorRecom
     rango = {"grafo": 0, "contenido": 1, "popularidad": 2}
     assert [rango[e] for e in estrategias] == sorted(rango[e] for e in estrategias)
     assert mixto.activaciones[0][0] == "contenido"
+    # todas las estrategias, también las de respaldo, devuelven las mismas claves de aporte
+    for r in (*res.recomendaciones, *mixto.recomendaciones):
+        assert set(r.aportes) == set(CLAVES_APORTE)
 
 
 def test_umbral_tau_activa_respaldo(indice: IndiceCatalogo) -> None:

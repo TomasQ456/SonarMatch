@@ -6,6 +6,8 @@ from typing import Literal
 EstrategiaId = Literal["grafo", "contenido", "popularidad"]
 MetodoMapeo = Literal["manual", "exacto", "alias", "difuso"]
 TERMINOS: tuple[str, ...] = ("s_tags", "s_grafo", "p_nov", "s_onto")
+# Claves de ``aportes``: el término de grafo se reparte en s_grafo (propio) y s_social (amigos).
+CLAVES_APORTE: tuple[str, ...] = ("s_tags", "s_grafo", "s_social", "p_nov", "s_onto")
 
 
 @dataclass(frozen=True)
@@ -69,6 +71,7 @@ class Explicacion:
     estrategia: EstrategiaId
     cadena_inferencia: tuple[str, ...]
     texto: str
+    amigos_origen: tuple[str, ...] = ()  # amigos (con consentimiento) que más aportaron
 
 
 @dataclass(frozen=True)
@@ -92,3 +95,26 @@ class PerfilGuardado:
     apodo: str
     artistas: tuple[EntradaPerfil, ...]
     comparte_gustos: bool = False  # consentimiento explícito para que lo usen sus amigos
+
+
+@dataclass(frozen=True)
+class PerfilAmigo:
+    """Perfil de un amigo que comparte sus gustos (construido igual que el del usuario)."""
+
+    apodo: str
+    perfil: PerfilUsuario
+
+
+@dataclass(frozen=True)
+class ContextoSocial:
+    """Amigos con consentimiento y β. El dominio nunca recibe amigos sin consentimiento."""
+
+    amigos: tuple[PerfilAmigo, ...]
+    beta: float
+
+    @property
+    def activo(self) -> bool:
+        return self.beta > 0 and any(a.perfil.indices for a in self.amigos)
+
+    def sin(self, apodo: str) -> "ContextoSocial":
+        return ContextoSocial(tuple(a for a in self.amigos if a.apodo != apodo), self.beta)

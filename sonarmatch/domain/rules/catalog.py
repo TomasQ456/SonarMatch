@@ -1,8 +1,9 @@
-"""Reglas R1–R6 declaradas como datos (umbrales en config.py).
+"""Reglas R1–R7 declaradas como datos (umbrales en config.py).
 
 Predicados usados:
 - Iniciales (fase perfil): peso_genero(G) [confianza = peso en el perfil base],
-  mediana_oyentes_perfil(m), percentil_oyentes(q, v).
+  mediana_oyentes_perfil(m), percentil_oyentes(q, v),
+  peso_genero_amigo(apodo, G) [solo amigos que comparten gustos y pesos ≥ θ₇].
 - Derivados: afinidad(G), explorar(H), candidato_r2(c, H), ajuste(parametro, delta).
 - Fase candidatos: candidato(c) [inicial], descartar(c) [derivado].
 """
@@ -131,6 +132,36 @@ def _red_r2(d: Disparo, ctx: ContextoReglas) -> str:
     n_art = sum(1 for h in d.conclusiones if h.predicado == "candidato_r2")
     return (
         f"R2: afinidad({padre}) y {hijo} no está en tu perfil → explorar({hijo}) "
+        f"({n_art} artistas candidatos)"
+    )
+
+
+# ---------------------------------------------------------------- R7 exploracion_social
+def _cond_r7(base: BaseHechos, ctx: ContextoReglas) -> Iterator[Coincidencia]:
+    por_genero: dict[str, list[Hecho]] = {}
+    for h in base.todos("peso_genero_amigo"):
+        if h.confianza >= ctx.config.theta7_r7:
+            por_genero.setdefault(str(h.args[1]), []).append(h)
+    for genero in sorted(por_genero):
+        premisas = sorted(por_genero[genero], key=lambda h: str(h.args[0]))
+        if len(premisas) >= ctx.config.min_amigos_r7 and not _en_perfil(base, genero):
+            yield Coincidencia(tuple(premisas), (genero,))
+
+
+def _acc_r7(c: Coincidencia, ctx: ContextoReglas) -> Iterable[Hecho]:
+    genero = str(c.ligaduras[0])
+    conf = min(1.0, sum(p.confianza for p in c.premisas) / len(c.premisas))
+    hechos = [Hecho("explorar", (genero,), conf)]
+    hechos += [Hecho("candidato_r2", (i, genero), conf) for i in artistas_de_genero(ctx, genero)]
+    return hechos
+
+
+def _red_r7(d: Disparo, ctx: ContextoReglas) -> str:
+    amigos = [str(p.args[0]) for p in d.coincidencia.premisas]
+    genero = _n(ctx, d.coincidencia.ligaduras[0])
+    n_art = sum(1 for h in d.conclusiones if h.predicado == "candidato_r2")
+    return (
+        f"R7: {lista_natural(amigos)} escuchan {genero} → exploré {genero} "
         f"({n_art} artistas candidatos)"
     )
 
@@ -307,5 +338,16 @@ REGLAS: tuple[Regla[ContextoReglas], ...] = (
         _cond_r6,
         _acc_r6,
         _red_r6,
+    ),
+    Regla(
+        "R7",
+        "exploracion_social",
+        "Si 2 o más amigos que comparten gustos tienen el género G con peso ≥ θ₇ y G no está en el "
+        "perfil del usuario: explorar(G); los M mejores artistas de G por S_tags se agregan a los "
+        "candidatos (como en R2).",
+        FASE_PERFIL,
+        _cond_r7,
+        _acc_r7,
+        _red_r7,
     ),
 )

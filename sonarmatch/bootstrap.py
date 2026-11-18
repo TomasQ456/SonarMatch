@@ -52,11 +52,12 @@ def crear_servicios(db_path: str, config_path: str | None = None) -> Servicios:
     motor = MotorRecomendacion(
         IndiceCatalogo.construir(repo.cargar_catalogo()), ConfigMotor.desde_json(ruta)
     )
-    servicio = ServicioRecomendacion(motor, repo)
+    perfiles = ServicioPerfiles(repo)
+    servicio = ServicioRecomendacion(motor, repo, perfiles)
     return Servicios(
         recomendar=servicio,
         catalogo=servicio,
         explicar=servicio,
         feedback=servicio,
-        perfiles=ServicioPerfiles(repo),
+        perfiles=perfiles,
     )
