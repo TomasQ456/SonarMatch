@@ -13,9 +13,12 @@ from sonarmatch.adapters.inbound.ui.componentes import (
     MSG_ERROR_GENERICO,
     dibujar_encabezado_resultados,
     dibujar_entrada,
+    dibujar_mi_perfil,
+    dibujar_seccion_amigos,
     dibujar_seccion_por_que_no,
     dibujar_sidebar,
     dibujar_tarjeta_recomendacion,
+    guardar_perfil_actual,
 )
 from sonarmatch.adapters.inbound.ui.presentadores import construir_solicitud
 from sonarmatch.bootstrap import Servicios, crear_servicios
@@ -61,9 +64,10 @@ def _ejecutar_recomendacion(
     servicios: Servicios,
     entradas: Sequence[tuple[str, float]],
     parametros: ParametrosMotor | None,
+    apodo: str | None = None,
 ) -> None:
     """Construye la solicitud, invoca el motor y guarda el resultado en session_state."""
-    solicitud = construir_solicitud(entradas, parametros=parametros)
+    solicitud = construir_solicitud(entradas, parametros=parametros, apodo=apodo)
     try:
         respuesta = servicios.recomendar.recomendar(solicitud)
     except ErrorEntradaInvalida as exc:
@@ -94,10 +98,16 @@ def main(servicios: Servicios) -> None:
     catalogo = servicios.catalogo.nombres_artistas()
 
     parametros = dibujar_sidebar(por_defecto)
+    apodo, comparte_gustos, guardar_click = dibujar_mi_perfil(servicios.perfiles)
     entradas, recomendar_click = dibujar_entrada(catalogo)
 
+    if guardar_click:
+        guardar_perfil_actual(servicios.perfiles, apodo, entradas, comparte_gustos)
+
+    dibujar_seccion_amigos(servicios.perfiles, apodo)
+
     if recomendar_click:
-        _ejecutar_recomendacion(servicios, entradas, parametros)
+        _ejecutar_recomendacion(servicios, entradas, parametros, apodo=apodo)
 
     respuesta = st.session_state.get("ultima_respuesta")
     solicitud = st.session_state.get("ultima_solicitud")
