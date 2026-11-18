@@ -18,4 +18,5 @@ data/*
 !data/mapeo_manual.csv
 !data/README.md
 # Logs de agentes (la tarea y el reporte sí se versionan).
-docs/agentes/logs/
+docs/agentes/
+reviews/

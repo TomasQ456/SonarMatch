@@ -323,7 +323,47 @@ sintético de 5.000 nodos verifica los límites de 3 s y 1,5 s.
 
 ## Calidad
 
-<!-- resultados finales pendientes -->
+**Resultados finales** (`python scripts/check.py` sobre `main` integrado):
+
+| Verificación | Resultado |
+|---|---|
+| `ruff format` / `ruff check` | ✅ sin errores |
+| `mypy --strict` | ✅ sin errores |
+| `import-linter` | ✅ 4 contratos respetados, 0 rotos |
+| `# noqa` / `type: ignore` sin justificar, secretos | ✅ ninguno |
+| `pytest` | ✅ 226 pruebas, incluido el benchmark de 5.000 nodos |
+| Cobertura total | 98 % |
+| Cobertura del backend | 98 % |
+| Cobertura del frontend | 99 % |
+
+**Revisión cruzada.** Antes de integrar, el responsable de cada área revisó el código de la otra
+según la especificación. Todos los hallazgos se corrigieron, y cada uno tiene su prueba:
+
+- **Backend:** 6 hallazgos (0 de severidad alta, 3 media, 3 baja):
+  - diagnóstico del umbral τ en "¿por qué no?";
+  - falsos positivos del mapeo difuso;
+  - intérprete de `import-linter` en `check.py`;
+  - configuración de partida de la evaluación;
+  - recuento de ciclos rotos en la ingesta;
+  - número de etiquetas dominantes como parámetro de `ConfigMotor`.
+- **Frontend:** 5 hallazgos (0 alta, 2 media, 3 baja):
+  - `noqa` sobrantes tras la integración;
+  - prueba de voto doble;
+  - mensaje de base inexistente;
+  - gancho de pruebas en `session_state`;
+  - aclaración del orden MMR.
+
+**Prueba de la app integrada.** La app se ejecutó con el backend real sobre el catálogo de
+demostración (`ingest --fixture`):
+
+- Con 6 artistas de entrada devuelve 10 recomendaciones en 13 ms.
+- El contrafactual se calcula bajo demanda en 0,25 s y el voto queda guardado en SQLite.
+- "¿Por qué no?" mostró el motivo correcto en todos los casos probados: Metallica (puntaje
+  insuficiente), Miles Davis (no conectado), Slowdive (ya en la entrada), Aphex Twin (descartado
+  por R5) y Codeine (desplazado por diversidad). Un artista fuera del catálogo y otro ya
+  recomendado se comprobaron directamente contra el servicio, porque el selector de la app solo
+  ofrece artistas del catálogo.
+
 
 - **Herramientas:** `ruff` (formato y lint, con complejidad máxima de 10), `mypy --strict` (sin
   `Any` explícito en el dominio; `ignore_missing_imports` solo por módulo), `import-linter`
