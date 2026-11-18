@@ -91,12 +91,16 @@ class GestionarPerfiles(Protocol):
   `[1, 5]`, sin vacíos ni repetidos). `comparte_gustos` es el consentimiento explícito.
 - **Amistades**: bidireccionales (agregar a B desde A hace a A amigo de B), sin duplicados ni
   autoamistad.
+- **`obtener_perfil`**: devuelve los artistas solo si el perfil comparte sus gustos. De un perfil
+  privado devuelve `PerfilDTO(apodo, (), False)`: sin autenticación no se puede saber si quien
+  pregunta es el dueño, así que un perfil privado no se puede recargar por apodo (la interfaz
+  debe avisarlo).
 - **`listar_amigos`**: ordenado por apodo; nunca expone los artistas de los amigos.
 - **`ErrorPerfil`** (subclase de `ErrorEntradaInvalida`, mensaje en español listo para mostrar):
   apodo inválido o inexistente, artistas inválidos al guardar, autoamistad, amistad repetida
   al agregar o inexistente al quitar.
-- **Sin autenticación** (limitación del prototipo): quien conoce un apodo puede cargar y
-  sobrescribir ese perfil. El consentimiento solo controla qué ven y usan los amigos.
+- **Sin autenticación** (limitación del prototipo): quien conoce un apodo puede sobrescribir ese
+  perfil y, si comparte gustos, cargar sus artistas.
 
 ## Servicios falsos (`crear_servicios_falsos()`)
 

@@ -1,8 +1,10 @@
 """Servicio de perfiles y amistades (puerto de entrada GestionarPerfiles).
 
-Sin autenticación: el apodo identifica al usuario, de modo que quien conoce un apodo puede cargar
-y sobrescribir ese perfil (limitación documentada del prototipo). El consentimiento
-(``comparte_gustos``) decide si los gustos de un perfil se usan y se nombran en las
+Sin autenticación: el apodo identifica al usuario, de modo que quien conoce un apodo puede
+sobrescribir ese perfil (limitación documentada del prototipo). Como no se puede comprobar
+quién pregunta, ``obtener_perfil`` solo devuelve los artistas de un perfil que comparte sus
+gustos; de uno privado devuelve el apodo y el consentimiento, sin artistas. El consentimiento
+(``comparte_gustos``) también decide si los gustos de un perfil se usan y se nombran en las
 recomendaciones de sus amigos; ``listar_amigos`` nunca expone artistas.
 """
 
@@ -45,7 +47,9 @@ class ServicioPerfiles:
         return a_perfil_dto(self.repo.guardar_perfil(clave, entradas, bool(comparte_gustos)))
 
     def obtener_perfil(self, apodo: str) -> PerfilDTO:
-        return a_perfil_dto(self._existente(apodo))
+        """Artistas solo si el perfil comparte sus gustos (sin autenticación no hay dueño)."""
+        dto = a_perfil_dto(self._existente(apodo))
+        return dto if dto.comparte_gustos else PerfilDTO(dto.apodo, (), False)
 
     def agregar_amigo(self, apodo: str, apodo_amigo: str) -> None:
         yo, amigo = self._pareja(apodo, apodo_amigo)
