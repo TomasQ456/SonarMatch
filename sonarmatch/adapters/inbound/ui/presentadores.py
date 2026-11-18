@@ -19,7 +19,7 @@ from sonarmatch.ports.inbound import (
 if TYPE_CHECKING:
     from collections.abc import Sequence
 
-    from sonarmatch.ports.inbound import EfectoContrafactual
+    from sonarmatch.ports.inbound import AmigoDTO, EfectoContrafactual
 
 UMBRAL_MILLON = 1_000_000
 UMBRAL_MIL = 1_000
@@ -29,6 +29,7 @@ MAX_ARTISTAS = 20
 ORDEN_APORTES: tuple[tuple[str, str], ...] = (
     ("s_tags", "Etiquetas"),
     ("s_grafo", "Conexiones"),
+    ("s_social", "Amigos"),
     ("p_nov", "Novedad"),
     ("s_onto", "Afinidad de género"),
 )
@@ -45,6 +46,9 @@ TEXTOS_MOTIVO_NO: dict[str, str] = {
     "ya_en_entrada": "Ya está entre los artistas de tu perfil.",
     "no_en_catalogo": "No está en el catálogo de SonarMatch.",
     "no_conectado": "No está conectado con tus artistas en el grafo de similitud.",
+    "no_conectado_ni_por_amigos": (
+        "No está conectado en el grafo de similitud ni con tus artistas ni con los de tus amigos."
+    ),
     "descartado_por_regla": (
         "Fue descartado por las reglas ontológicas debido a incompatibilidad de género."
     ),
@@ -136,18 +140,29 @@ def texto_contador_artistas(n: int) -> str:
 def construir_solicitud(
     artistas: Sequence[tuple[str, float]] | dict[str, float],
     parametros: ParametrosMotor | None = None,
+    apodo: str | None = None,
 ) -> SolicitudRecomendacion:
     """Construye un DTO SolicitudRecomendacion a partir de pares (nombre, peso) o dict."""
     if isinstance(artistas, dict):
         entradas = tuple(EntradaArtista(nombre=k, peso=float(v)) for k, v in artistas.items())
     else:
         entradas = tuple(EntradaArtista(nombre=k, peso=float(v)) for k, v in artistas)
-    return SolicitudRecomendacion(artistas=entradas, parametros=parametros)
+    apodo_limpio = apodo.strip() if isinstance(apodo, str) and apodo.strip() else None
+    return SolicitudRecomendacion(artistas=entradas, parametros=parametros, apodo=apodo_limpio)
 
 
 def texto_motivo_no(motivo: MotivoNo | str) -> str:
     """Retorna una explicación en lenguaje natural para un valor de MotivoNo."""
     return TEXTOS_MOTIVO_NO.get(str(motivo), f"Motivo: {motivo}")
+
+
+def formatear_efecto_contrafactual(efecto: EfectoContrafactual) -> str:
+    """Formatea la etiqueta del sujeto evaluado en un efecto contrafactual."""
+    if efecto.tipo == "amigos":
+        return "Sin tus amigos"
+    if efecto.tipo == "amigo":
+        return f"Sin el amigo {efecto.artista_usuario}"
+    return f"Sin {efecto.artista_usuario}"
 
 
 def filas_tabla_contrafactual(
@@ -166,7 +181,7 @@ def filas_tabla_contrafactual(
         )
         filas.append(
             {
-                "Artista de tu lista": efecto.artista_usuario,
+                "Qué se quita": formatear_efecto_contrafactual(efecto),
                 "Posición original": f"#{efecto.posicion_original}",
                 "Posición sin artista": pos_sin,
                 "Cambio": f"#{efecto.posicion_original} → {pos_sin}",
@@ -184,6 +199,7 @@ def son_parametros_iguales(p1: ParametrosMotor, p2: ParametrosMotor, tol: float 
         and math.isclose(p1.c, p2.c, abs_tol=tol)
         and math.isclose(p1.d, p2.d, abs_tol=tol)
         and math.isclose(p1.lambda_mmr, p2.lambda_mmr, abs_tol=tol)
+        and math.isclose(p1.beta, p2.beta, abs_tol=tol)
     )
 
 
@@ -217,3 +233,10 @@ def formatear_resumen_estrategias(estrategias_usadas: dict[str, int]) -> str:
         if cantidad > 0
     ]
     return " · ".join(partes) if partes else "Sin estrategias registradas"
+
+
+def formatear_estado_amigo(amigo: AmigoDTO) -> str:
+    """Formatea un amigo de la lista indicando si comparte sus gustos o no."""
+    if amigo.comparte_gustos:
+        return f"**{amigo.apodo}** — Comparte sus gustos (influye en tus recomendaciones)"
+    return f"**{amigo.apodo}** — No comparte sus gustos (por eso no influye en tus recomendaciones)"
