@@ -35,14 +35,24 @@ def _sol(apodo: str | None, beta: float | None = None) -> SolicitudRecomendacion
 
 
 # ------------------------------------------------------------------ servicio de perfiles
-def test_guardar_y_obtener_normaliza_el_apodo_y_respeta_el_consentimiento() -> None:
+def test_guardar_y_obtener_normaliza_el_apodo() -> None:
     s = _servicio()
-    guardado = s.guardar_perfil("  Ana_M ", ARTISTAS, comparte_gustos=False)
+    guardado = s.guardar_perfil("  Ana_M ", ARTISTAS, comparte_gustos=True)
     assert guardado.apodo == "ana_m"
     leido = s.obtener_perfil("ANA_M")
     assert leido == guardado
-    assert leido.comparte_gustos is False
     assert [a.nombre for a in leido.artistas] == list(ENTRADA_FALSA[:5])
+
+
+def test_obtener_un_perfil_privado_no_expone_sus_artistas() -> None:
+    s = _servicio()
+    guardado = s.guardar_perfil("luis_priv", ARTISTAS, comparte_gustos=False)
+    assert guardado.artistas  # al guardarlo, quien lo guarda ve lo que acaba de enviar
+    leido = s.obtener_perfil("Luis_Priv")
+    assert leido.apodo == "luis_priv"
+    assert leido.comparte_gustos is False
+    assert leido.artistas == ()
+    assert crear_servicios_falsos().perfiles.obtener_perfil("luis_priv").artistas == ()
 
 
 def test_guardar_de_nuevo_reemplaza_sin_duplicar() -> None:
