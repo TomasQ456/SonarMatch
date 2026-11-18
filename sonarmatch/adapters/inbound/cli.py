@@ -17,6 +17,7 @@ from pathlib import Path
 from sonarmatch.adapters.outbound.sqlite_repository import RepositorioSQLite, guardar_catalogo
 from sonarmatch.bootstrap import crear_servicios
 from sonarmatch.config import RUTA_CALIBRADOS
+from sonarmatch.evaluation.datasets import artistas_mas_escuchados_hetrec
 from sonarmatch.evaluation.protocol import evaluar_desde_cli
 from sonarmatch.evaluation.social import evaluar_social_desde_cli
 from sonarmatch.ingestion.fixture import RUTA_FIXTURE, catalogo_desde_json
@@ -36,7 +37,27 @@ def cmd_ingest(args: argparse.Namespace) -> int:
         guardar_catalogo(RepositorioSQLite(ruta), catalogo_desde_json(RUTA_FIXTURE))
         print(f"Catálogo de demostración cargado en {ruta}")
         return 0
-    return ingerir_desde_entorno(ruta, objetivo=args.objetivo, musicbrainz=not args.sin_musicbrainz)
+    extra: tuple[str, ...] = ()
+    if args.semillas_hetrec:
+        extra = tuple(artistas_mas_escuchados_hetrec(Path(args.semillas_hetrec), args.n_semillas))
+        print(f"{len(extra)} semillas de HetRec")
+    return ingerir_desde_entorno(
+        ruta, objetivo=args.objetivo, musicbrainz=not args.sin_musicbrainz, semillas_extra=extra
+    )
+
+
+def cargar_env(ruta: Path) -> None:
+    """Lee KEY=VALUE de ``ruta`` (si existe) sin sobrescribir variables ya definidas."""
+    if not ruta.exists():
+        return
+    for cruda in ruta.read_text(encoding="utf-8").splitlines():
+        linea = cruda.strip()
+        if not linea or linea.startswith("#") or "=" not in linea:
+            continue
+        clave, _, valor = linea.partition("=")
+        valor = valor.strip().strip('"').strip("'")
+        if clave.strip() and valor:
+            os.environ.setdefault(clave.strip(), valor)
 
 
 def _parsear_entrada(texto: str) -> EntradaArtista:
@@ -103,6 +124,10 @@ def construir_parser() -> argparse.ArgumentParser:
     p_ing.add_argument("--fixture", action="store_true", help="carga el catálogo sintético")
     p_ing.add_argument("--objetivo", type=int, default=5000, help="artistas a alcanzar")
     p_ing.add_argument("--sin-musicbrainz", action="store_true", help="omite país y año")
+    p_ing.add_argument(
+        "--semillas-hetrec", help="carpeta de HetRec: siembra con sus artistas más escuchados"
+    )
+    p_ing.add_argument("--n-semillas", type=int, default=1000, help="semillas de HetRec")
     p_ing.set_defaults(func=cmd_ingest)
 
     p_rec = sub.add_parser("recommend", help="recomienda desde la terminal")
@@ -143,6 +168,8 @@ def construir_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    if argv is None:  # ejecución real: lee .env (las pruebas pasan argv y no lo leen)
+        cargar_env(Path(".env"))
     args = construir_parser().parse_args(argv)
     func: Callable[[argparse.Namespace], int] = args.func
     return func(args)

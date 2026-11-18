@@ -1,5 +1,6 @@
 """Limpieza de etiquetas e ingesta de punta a punta con fuentes simuladas."""
 
+import os
 from pathlib import Path
 
 import pytest
@@ -8,8 +9,15 @@ from sonarmatch.adapters.inbound import cli
 from sonarmatch.adapters.outbound.sqlite_repository import RepositorioSQLite
 from sonarmatch.domain.indice import IndiceCatalogo
 from sonarmatch.domain.models import Genero
+from sonarmatch.evaluation.datasets import artistas_mas_escuchados_hetrec
 from sonarmatch.ingestion.limpieza import limpiar_etiquetas
-from sonarmatch.ingestion.pipeline import ConfigIngesta, Ingesta, generos_alcanzables
+from sonarmatch.ingestion.pipeline import (
+    AGENTE_GENERICO,
+    ConfigIngesta,
+    Ingesta,
+    agente_http,
+    generos_alcanzables,
+)
 from sonarmatch.ports.outbound import ArtistaFuente, SimilarFuente
 
 
@@ -172,3 +180,63 @@ def test_ingesta_informa_ciclos_rotos(ingesta: Ingesta) -> None:
     assert ingesta.ejecutar().ciclos_rotos == 0
     ingesta.ontologia = OntologiaConCiclo()
     assert ingesta.ejecutar().ciclos_rotos == 1
+
+
+# ---------------------------------------------------------------- semillas de HetRec y entorno
+def test_semillas_extra_van_primero_y_se_exploran(tmp_path: Path) -> None:
+    repo = RepositorioSQLite(tmp_path / "s.db")
+    repo.crear_esquema()
+    ingesta = Ingesta(
+        repo,
+        FuenteFalsa(),
+        OntologiaFalsa(),
+        None,
+        ConfigIngesta(objetivo=3, etiquetas_semilla=(), semillas_extra=("E", "D")),
+    )
+    assert ingesta.semillas()[:2] == ["E", "D"]
+    assert ingesta.descubrir() == ["E", "D", "A"]  # sin las extra serían A, F, B
+
+
+def test_artistas_mas_escuchados_hetrec(tmp_path: Path) -> None:
+    (tmp_path / "artists.dat").write_text(
+        "id\tname\turl\tpictureURL\n1\tA\tx\ty\n2\tB\tx\ty\n3\tC\tx\ty\n", encoding="utf-8"
+    )
+    (tmp_path / "user_artists.dat").write_bytes(
+        b"userID\tartistID\tweight\r\n1\t2\t5\r\n2\t2\t1\r\n1\t1\t900\r\n3\t3\t1\r\n3\t2\t1\r\n"
+    )
+    assert artistas_mas_escuchados_hetrec(tmp_path, 2) == ["B", "A"]  # por oyentes, no por plays
+
+
+def test_agente_generico_si_no_hay_mb_user_agent(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.delenv("MB_USER_AGENT", raising=False)
+    assert agente_http() == AGENTE_GENERICO
+    assert "@" not in AGENTE_GENERICO
+    monkeypatch.setenv("MB_USER_AGENT", "Equipo/1.0")
+    assert agente_http() == "Equipo/1.0"
+
+
+def test_cargar_env_no_sobrescribe(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    env = tmp_path / ".env"
+    env.write_text(
+        "# comentario\nLASTFM_API_KEY=abc123\nMB_USER_AGENT='App/1'\nSONARMATCH_DB=\nRARO\n",
+        encoding="utf-8",
+    )
+    monkeypatch.delenv("LASTFM_API_KEY", raising=False)
+    monkeypatch.delenv("SONARMATCH_DB", raising=False)
+    monkeypatch.setenv("MB_USER_AGENT", "ya definido")
+    cli.cargar_env(env)
+    assert os.environ["LASTFM_API_KEY"] == "abc123"
+    assert os.environ["MB_USER_AGENT"] == "ya definido"
+    assert "SONARMATCH_DB" not in os.environ  # valores vacíos se ignoran
+    cli.cargar_env(tmp_path / "no_existe")
+
+
+def test_cli_ingest_con_semillas_hetrec_sin_clave(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, capsys: pytest.CaptureFixture[str]
+) -> None:
+    monkeypatch.delenv("LASTFM_API_KEY", raising=False)
+    (tmp_path / "artists.dat").write_text("id\tname\turl\tpictureURL\n1\tA\tx\ty\n")
+    (tmp_path / "user_artists.dat").write_bytes(b"userID\tartistID\tweight\r\n1\t1\t5\r\n")
+    args = ["ingest", "--db", str(tmp_path / "x.db"), "--semillas-hetrec", str(tmp_path)]
+    assert cli.main(args) == 2
+    assert "1 semillas de HetRec" in capsys.readouterr().out
