@@ -4,6 +4,7 @@ Uso:
   python -m sonarmatch.adapters.inbound.cli ingest [--fixture] [--db data/sonarmatch.db]
   python -m sonarmatch.adapters.inbound.cli recommend "Artista:peso" ... [--db ...]
   python -m sonarmatch.adapters.inbound.cli evaluate [--dataset hetrec|csv] [--ruta ...]
+  python -m sonarmatch.adapters.inbound.cli evaluate-social [--ruta ...] [--params ...]
 """
 
 import argparse
@@ -15,7 +16,9 @@ from pathlib import Path
 
 from sonarmatch.adapters.outbound.sqlite_repository import RepositorioSQLite, guardar_catalogo
 from sonarmatch.bootstrap import crear_servicios
+from sonarmatch.config import RUTA_CALIBRADOS
 from sonarmatch.evaluation.protocol import evaluar_desde_cli
+from sonarmatch.evaluation.social import evaluar_social_desde_cli
 from sonarmatch.ingestion.fixture import RUTA_FIXTURE, catalogo_desde_json
 from sonarmatch.ingestion.pipeline import ingerir_desde_entorno
 from sonarmatch.ports.inbound import EntradaArtista, ErrorEntradaInvalida, SolicitudRecomendacion
@@ -79,6 +82,17 @@ def cmd_evaluate(args: argparse.Namespace) -> int:
     )
 
 
+def cmd_evaluate_social(args: argparse.Namespace) -> int:
+    return evaluar_social_desde_cli(
+        Path(args.db),
+        Path(args.ruta),
+        Path(args.params),
+        salida=Path(args.salida),
+        semilla=args.semilla,
+        guardar=not args.sin_guardar_parametros,
+    )
+
+
 def construir_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="sonarmatch", description=__doc__)
     sub = parser.add_subparsers(dest="comando", required=True)
@@ -110,6 +124,19 @@ def construir_parser() -> argparse.ArgumentParser:
         "--sin-guardar-parametros", action="store_true", help="no escribe parametros_calibrados"
     )
     p_ev.set_defaults(func=cmd_evaluate)
+
+    p_so = sub.add_parser("evaluate-social", help="evaluación de la dimensión social (HetRec)")
+    p_so.add_argument("--db", default=db)
+    p_so.add_argument("--ruta", default="data/hetrec2011-lastfm-2k", help="carpeta de HetRec")
+    p_so.add_argument(
+        "--params", default=str(RUTA_CALIBRADOS), help="parámetros base (se guarda β aquí)"
+    )
+    p_so.add_argument("--salida", default="reports")
+    p_so.add_argument("--semilla", type=int, default=42)
+    p_so.add_argument(
+        "--sin-guardar-parametros", action="store_true", help="no escribe β en --params"
+    )
+    p_so.set_defaults(func=cmd_evaluate_social)
 
     return parser
 
