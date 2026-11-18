@@ -17,7 +17,9 @@ from sonarmatch.evaluation.social import (
     ResultadoSocial,
     bootstrap_pareado,
     conclusion,
+    discusion,
     ejecutar_social,
+    markdown_social,
     perfiles_de_amigos,
     preparar_casos_sociales,
 )
@@ -195,3 +197,23 @@ def test_perfiles_de_amigos_acepta_un_solo_artista(motor: MotorRecomendacion) ->
     assert list(amigos) == ["7"]
     assert amigos["7"].artistas == ((3, 3.0),)
     assert emparejar(filas, motor.indice.por_nombre) == []  # como usuario no es evaluable
+
+
+@pytest.mark.parametrize(
+    ("beta", "ic", "homofilia", "esperado"),
+    [
+        (0.25, (0.01, 0.09), 0.4, "aportan artistas que el grafo"),
+        (0.25, (-0.02, 0.04), 0.1, "diluyen el perfil propio"),
+        (0.0, (0.0, 0.0), 0.6, "resulta redundante"),
+    ],
+)
+def test_discusion_de_homofilia_y_dispersion(
+    beta: float, ic: tuple[float, float], homofilia: float, esperado: str
+) -> None:
+    res = ResultadoSocial("t", 7, 3, beta, {}, [], 0.0, ic, homofilia, 3.0, 2)
+    texto = "\n".join(discusion(res))
+    assert "Homofilia frente a influencia" in texto
+    assert esperado in texto
+    assert "Mediana de 3 amigos activos" in texto
+    assert "2 no tienen ninguno" in texto
+    assert "## Discusión" in markdown_social(res)

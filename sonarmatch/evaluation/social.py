@@ -60,6 +60,7 @@ BETAS = (0.0, 0.1, 0.25, 0.5, 0.75)
 GRUPOS = (("1–2", 1, 2), ("3–5", 3, 5), ("más de 5", 6, 10**9))
 SIN_R7 = OpcionesMotor(sin_reglas=frozenset({"R7"}))
 REMUESTREOS = 2000
+UMBRAL_HOMOFILIA = 0.25  # por debajo, los amigos casi no escuchan lo que el usuario oculta
 K = 10
 
 
@@ -271,7 +272,7 @@ def conclusion(res: ResultadoSocial) -> str:
             "**No mejora.** La calibración en validación eligió β = 0: ningún peso de los amigos "
             "superó al sistema actual."
         )
-    if lo > 0:
+    if mejora(res):
         return (
             f"**Mejora.** Con β = {res.beta:.2f}, P@10 sube {d:+.3f} en prueba "
             f"(IC 95 % de la diferencia pareada: [{lo:+.3f}, {hi:+.3f}], que no incluye 0)."
@@ -285,6 +286,43 @@ def conclusion(res: ResultadoSocial) -> str:
         f"**No hay mejora demostrable.** Con β = {res.beta:.2f}, P@10 cambia {d:+.3f} en prueba, "
         f"pero el IC 95 % de la diferencia pareada ([{lo:+.3f}, {hi:+.3f}]) incluye 0."
     )
+
+
+def mejora(res: ResultadoSocial) -> bool:
+    return res.beta > 0 and res.ic_diferencia[0] > 0
+
+
+def discusion(res: ResultadoSocial) -> list[str]:
+    """Interpretación de homofilia y dispersión, con o sin mejora (la especificación lo pide)."""
+    h = 100 * res.homofilia
+    lineas = [
+        "- **Homofilia frente a influencia.** HetRec es observacional: si los amigos ayudan, no "
+        "se puede saber si es porque se parecen (homofilia) o porque se influyen (influencia). "
+        "El sistema solo aprovecha la correlación, y para recomendar eso basta.",
+    ]
+    if mejora(res):
+        lineas.append(
+            f"- El {h:.1f} % de los artistas ocultos está en el perfil de algún amigo: los amigos "
+            "aportan artistas que el grafo de similitud no alcanzaba desde el perfil propio."
+        )
+    elif res.homofilia < UMBRAL_HOMOFILIA:
+        lineas.append(
+            f"- Solo el {h:.1f} % de los artistas ocultos está en el perfil de algún amigo: los "
+            "amigos escuchan sobre todo otras cosas, y sus semillas diluyen el perfil propio "
+            "en vez de acotarlo."
+        )
+    else:
+        lineas.append(
+            f"- El {h:.1f} % de los artistas ocultos sí está en el perfil de algún amigo, pero no "
+            "mejora: el grafo de similitud ya llega a esos artistas desde el perfil propio, así "
+            "que la señal de los amigos resulta redundante."
+        )
+    lineas.append(
+        f"- **Dispersión del grafo social.** Mediana de {res.amigos_activos_mediana:.0f} amigos "
+        f"activos por usuario de prueba; {res.sin_amigos_activos} no tienen ninguno con artistas "
+        "en el catálogo, y para ellos β no cambia nada, lo que acerca la diferencia media a 0."
+    )
+    return lineas
 
 
 def markdown_social(res: ResultadoSocial) -> str:
@@ -307,7 +345,8 @@ def markdown_social(res: ResultadoSocial) -> str:
         lineas.append(
             f"- **Atención:** solo {res.usuarios_prueba} usuarios de prueba; no es concluyente."
         )
-    lineas += ["", "## Conclusión", "", conclusion(res), "", "## Resultados en prueba", ""]
+    lineas += ["", "## Conclusión", "", conclusion(res), "", "## Discusión", "", *discusion(res)]
+    lineas += ["", "## Resultados en prueba", ""]
     lineas += [
         "| Amigos activos | Sistema | Usuarios | P@10 | R@10 | Novedad ↓ | ILS |",
         "|---|---|---:|---:|---:|---:|---:|",

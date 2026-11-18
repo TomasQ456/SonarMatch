@@ -6,7 +6,7 @@ from typing import Literal
 import numpy as np
 
 from sonarmatch.domain.indice import IndiceCatalogo
-from sonarmatch.domain.models import Recomendacion
+from sonarmatch.domain.models import CLAVES_APORTE, Recomendacion
 from sonarmatch.domain.razonamiento import PerfilRazonado
 from sonarmatch.domain.strategies.base import ResultadoEstrategia
 
@@ -38,7 +38,7 @@ class EstrategiaContenido:
                 puntaje_crudo=float(sims[i]),
                 oyentes=self.indice.artistas[i].oyentes,
                 estrategia=self.id,
-                aportes={"s_tags": float(sims[i]), "s_grafo": 0.0, "p_nov": 0.0, "s_onto": 0.0},
+                aportes={**dict.fromkeys(CLAVES_APORTE, 0.0), "s_tags": float(sims[i])},
             )
             for i in orden[:n]
         ]

@@ -49,7 +49,7 @@ def a_dto(r: Recomendacion) -> RecomendacionDTO:
         artista_id=r.artista_id,
         nombre=r.nombre,
         puntaje=min(1.0, max(0.0, r.puntaje)),
-        aportes={"s_social": 0.0, **r.aportes},
+        aportes=dict(r.aportes),
         explicacion=exp.texto if exp else "",
         artistas_origen=exp.artistas_origen if exp else (),
         etiquetas_clave=exp.etiquetas_clave if exp else (),

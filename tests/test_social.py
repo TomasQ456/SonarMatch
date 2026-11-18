@@ -11,7 +11,14 @@ from sonarmatch.adapters.outbound.sqlite_repository import RepositorioSQLite, gu
 from sonarmatch.application.perfiles import ServicioPerfiles
 from sonarmatch.application.recommend_service import ServicioRecomendacion
 from sonarmatch.config import ConfigMotor
-from sonarmatch.domain.counterfactual import TODOS_TUS_AMIGOS, Contrafactuales, diagnosticar
+from sonarmatch.domain.counterfactual import (
+    TODOS_TUS_AMIGOS,
+    Contrafactuales,
+    Efecto,
+    diagnosticar,
+    resumen_efectos,
+    sujeto,
+)
 from sonarmatch.domain.indice import IndiceCatalogo
 from sonarmatch.domain.models import (
     Catalogo,
@@ -27,6 +34,7 @@ from sonarmatch.ports.inbound import (
     ParametrosMotor,
     SolicitudRecomendacion,
 )
+from sonarmatch.testing.fakes import ENTRADA_FALSA, crear_servicios_falsos
 
 SHOEGAZE = ("Slowdive", "Low", "Codeine", "Red House Painters", "My Bloody Valentine", "Lush")
 POST_ROCK_A = (
@@ -377,3 +385,43 @@ def test_por_que_no_y_contrafactual_del_servicio_con_amigos(
     assert {e.tipo for e in cf.efectos} == {"artista", "amigo", "amigos"}
     assert "todos tus amigos" in {e.artista_usuario for e in cf.efectos}
     assert servicio.parametros_por_defecto().beta == pytest.approx(ConfigMotor().beta)
+
+
+# ------------------------------------------------------------------ revisión cruzada (BS-01, BS-03)
+def test_resumen_de_efectos_nombra_amigos_y_todos_los_amigos() -> None:
+    todos = Efecto(TODOS_TUS_AMIGOS, 2, None, None, "amigos")
+    uno = Efecto("ana_m", 2, 7, 0.4, "amigo")
+    artista = Efecto("Slowdive", 2, 3, 0.5)
+    assert sujeto(todos) == "tus amigos"
+    assert sujeto(uno) == "tu amigo ana_m"
+    assert sujeto(artista) == "Slowdive"
+    assert resumen_efectos("Low", [todos, artista]).startswith("Sin tus amigos, Low dejaría")
+    assert resumen_efectos("Low", [uno, artista]).startswith("Sin tu amigo ana_m, Low")
+    quieto = [Efecto("Slowdive", 2, 2, 0.5), Efecto("ana_m", 2, 2, 0.5, "amigo")]
+    assert "tus artistas ni tus amigos" in resumen_efectos("Low", quieto)
+    assert "ni tus amigos" not in resumen_efectos("Low", quieto[:1])
+
+
+@pytest.mark.parametrize(
+    "parametros",
+    [
+        ParametrosMotor(0.3, 0.35, 0.15, 0.2, 0.7, beta=1.0),
+        ParametrosMotor(0.0, 1.0, 0.0, 0.0, 0.7, beta=1.0),
+        ParametrosMotor(0.5, 0.0, 0.3, 0.2, 0.7, beta=0.5),
+    ],
+)
+def test_fakes_con_beta_alto_o_sin_grafo_no_dan_aportes_imposibles(
+    parametros: ParametrosMotor,
+) -> None:
+    sol = SolicitudRecomendacion(
+        tuple(EntradaArtista(n, 3) for n in ENTRADA_FALSA[:5]), parametros, "demo"
+    )
+    for r in crear_servicios_falsos().recomendar.recomendar(sol).recomendaciones:
+        assert all(v >= 0 for v in r.aportes.values())
+        assert sum(r.aportes.values()) == pytest.approx(r.puntaje)
+        if r.aportes["s_social"] == 0:
+            assert r.amigos_origen == ()
+            assert "% viene de lo que escuchan" not in r.explicacion
+        if "% viene" in r.explicacion:
+            pct = int(r.explicacion.split("El ")[-1].split(" %")[0])
+            assert 1 <= pct <= 100

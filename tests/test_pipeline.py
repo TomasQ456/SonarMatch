@@ -135,6 +135,9 @@ def test_grafo_desconectado_completa_con_respaldo_sin_duplicar(motor: MotorRecom
     rango = {"grafo": 0, "contenido": 1, "popularidad": 2}
     assert [rango[e] for e in estrategias] == sorted(rango[e] for e in estrategias)
     assert mixto.activaciones[0][0] == "contenido"
+    # todas las estrategias, también las de respaldo, devuelven las mismas claves de aporte
+    for r in (*res.recomendaciones, *mixto.recomendaciones):
+        assert set(r.aportes) == set(CLAVES_APORTE)
 
 
 def test_umbral_tau_activa_respaldo(indice: IndiceCatalogo) -> None:
