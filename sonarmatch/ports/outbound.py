@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from typing import Literal, Protocol
 
-from sonarmatch.domain.models import Catalogo, EstrategiaId, Genero
+from sonarmatch.domain.models import Catalogo, EntradaPerfil, EstrategiaId, Genero, PerfilGuardado
 
 
 @dataclass(frozen=True)
@@ -54,3 +54,15 @@ class FuenteOntologia(Protocol):
 
     def generos_musicales(self) -> list[Genero]: ...
     def aristas_subclase(self) -> list[tuple[str, str]]: ...
+
+
+class RepositorioPerfiles(Protocol):
+    """Perfiles por apodo único y amistades bidireccionales (sin duplicados ni autorrelaciones)."""
+
+    def obtener_perfil(self, apodo: str) -> PerfilGuardado | None: ...
+    def guardar_perfil(
+        self, apodo: str, artistas: tuple[EntradaPerfil, ...], comparte_gustos: bool
+    ) -> PerfilGuardado: ...
+    def agregar_amistad(self, perfil_a: int, perfil_b: int) -> bool: ...  # False si ya existía
+    def quitar_amistad(self, perfil_a: int, perfil_b: int) -> bool: ...  # False si no existía
+    def amigos(self, perfil: int) -> list[PerfilGuardado]: ...

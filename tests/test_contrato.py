@@ -37,6 +37,7 @@ PROTOCOLOS = {
     "catalogo": inbound.ConsultarCatalogo,
     "explicar": inbound.ExplicarRecomendacion,
     "feedback": inbound.RegistrarFeedback,
+    "perfiles": inbound.GestionarPerfiles,
 }
 
 
@@ -55,7 +56,9 @@ def test_recomendar_devuelve_diez_con_aportes_que_suman_el_puntaje() -> None:
     resp = crear_servicios_falsos().recomendar.recomendar(_solicitud())
     assert len(resp.recomendaciones) == 10
     for r in resp.recomendaciones:
-        assert set(r.aportes) == {"s_tags", "s_grafo", "p_nov", "s_onto"}
+        assert set(r.aportes) == {"s_tags", "s_grafo", "s_social", "p_nov", "s_onto"}
+        assert r.aportes["s_social"] == 0  # sin apodo no hay aporte de amigos
+        assert r.amigos_origen == ()
         assert sum(r.aportes.values()) == pytest.approx(r.puntaje)
         assert r.cadena_inferencia
         assert set(r.artistas_origen) <= set(ENTRADA_FALSA)

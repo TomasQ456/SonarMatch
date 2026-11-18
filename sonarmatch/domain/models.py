@@ -82,3 +82,13 @@ class Recomendacion:
     estrategia: EstrategiaId
     explicacion: Explicacion | None = None
     aportes: dict[str, float] = field(default_factory=dict)
+
+
+@dataclass(frozen=True)
+class PerfilGuardado:
+    """Perfil persistido de un usuario de SonarMatch (identificado solo por su apodo)."""
+
+    id: int
+    apodo: str
+    artistas: tuple[EntradaPerfil, ...]
+    comparte_gustos: bool = False  # consentimiento explícito para que lo usen sus amigos

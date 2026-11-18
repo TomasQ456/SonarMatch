@@ -1,10 +1,11 @@
 """Raíz de composición: conecta los adaptadores de salida con los servicios de aplicación."""
 
 import os
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 
 from sonarmatch.adapters.outbound.sqlite_repository import RepositorioSQLite
+from sonarmatch.application.perfiles import PerfilesNoDisponibles
 from sonarmatch.application.recommend_service import ServicioRecomendacion
 from sonarmatch.config import RUTA_CALIBRADOS, ConfigMotor
 from sonarmatch.domain.indice import IndiceCatalogo
@@ -12,6 +13,7 @@ from sonarmatch.domain.pipeline import MotorRecomendacion
 from sonarmatch.ports.inbound import (
     ConsultarCatalogo,
     ExplicarRecomendacion,
+    GestionarPerfiles,
     RecomendarArtistas,
     RegistrarFeedback,
 )
@@ -24,12 +26,13 @@ MENSAJE_INGESTA = (
 
 @dataclass(frozen=True)
 class Servicios:
-    """Los cuatro puertos de entrada ya conectados."""
+    """Los puertos de entrada ya conectados (``perfiles`` tiene valor por defecto: es aditivo)."""
 
     recomendar: RecomendarArtistas
     catalogo: ConsultarCatalogo
     explicar: ExplicarRecomendacion
     feedback: RegistrarFeedback
+    perfiles: GestionarPerfiles = field(default_factory=PerfilesNoDisponibles)
 
 
 def crear_servicios(db_path: str, config_path: str | None = None) -> Servicios:

@@ -47,6 +47,12 @@ class ConfigMotor:
     ajuste_lambda_r6: float = -0.10
     max_iteraciones_reglas: int = 50
 
+    # --- Dimensión social ---
+    beta: float = 0.25  # s = (1 − β)·s_propio + β·s_amigos (β = 0 si no hay amigos que compartan)
+    theta7_r7: float = 0.15  # peso mínimo de un género en el perfil de un amigo para R7
+    min_amigos_r7: int = 2  # amigos que comparten gustos y escuchan el género
+    n_amigos_origen: int = 2  # amigos que nombra la explicación
+
     # --- Explicaciones ---
     umbral_poco_conocido: float = 0.45  # P_nov crudo por encima del cual se dice "poco conocido"
     n_artistas_origen: int = 2

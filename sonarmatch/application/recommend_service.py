@@ -47,7 +47,7 @@ def a_dto(r: Recomendacion) -> RecomendacionDTO:
         artista_id=r.artista_id,
         nombre=r.nombre,
         puntaje=min(1.0, max(0.0, r.puntaje)),
-        aportes=dict(r.aportes),
+        aportes={"s_social": 0.0, **r.aportes},
         explicacion=exp.texto if exp else "",
         artistas_origen=exp.artistas_origen if exp else (),
         etiquetas_clave=exp.etiquetas_clave if exp else (),
@@ -107,7 +107,7 @@ class ServicioRecomendacion:
 
     def parametros_por_defecto(self) -> ParametrosMotor:
         c = self.motor.config
-        return ParametrosMotor(a=c.a, b=c.b, c=c.c, d=c.d, lambda_mmr=c.lambda_mmr)
+        return ParametrosMotor(a=c.a, b=c.b, c=c.c, d=c.d, lambda_mmr=c.lambda_mmr, beta=c.beta)
 
     # --------------------------------------------------------- ExplicarRecomendacion
     def contrafactual(self, solicitud: SolicitudRecomendacion, artista_id: int) -> ContrafactualDTO:

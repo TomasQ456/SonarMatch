@@ -7,6 +7,8 @@ from dataclasses import dataclass, field
 from typing import Literal, Protocol
 
 Estrategia = Literal["grafo", "contenido", "popularidad"]
+# A quién se refiere un efecto contrafactual: un artista del usuario, un amigo o todos los amigos.
+TipoEfecto = Literal["artista", "amigo", "amigos"]
 
 
 @dataclass(frozen=True)
@@ -22,12 +24,14 @@ class ParametrosMotor:
     c: float  # peso P_nov
     d: float  # peso S_onto
     lambda_mmr: float
+    beta: float = 0.25  # peso de los amigos en la personalización de PPR (0 = sin amigos)
 
 
 @dataclass(frozen=True)
 class SolicitudRecomendacion:
     artistas: tuple[EntradaArtista, ...]  # entre 5 y 20
     parametros: ParametrosMotor | None = None  # None = valores calibrados
+    apodo: str | None = None  # si viene, se usan sus amigos que comparten gustos
 
 
 @dataclass(frozen=True)
@@ -35,7 +39,8 @@ class RecomendacionDTO:
     artista_id: int
     nombre: str
     puntaje: float  # 0..1
-    # claves: "s_tags", "s_grafo", "p_nov", "s_onto" (ponderados, suman el puntaje)
+    # claves: "s_tags", "s_grafo", "s_social", "p_nov", "s_onto" (ponderados, suman el puntaje;
+    # s_grafo + s_social = término de grafo)
     aportes: dict[str, float]
     explicacion: str
     artistas_origen: tuple[str, ...]  # artistas del usuario que más aportaron
@@ -43,6 +48,7 @@ class RecomendacionDTO:
     estrategia: Estrategia
     oyentes: int
     cadena_inferencia: tuple[str, ...] = ()  # pasos legibles de las reglas que influyeron
+    amigos_origen: tuple[str, ...] = ()  # apodos de amigos (con consentimiento) que más aportaron
 
 
 @dataclass(frozen=True)
@@ -55,10 +61,11 @@ class RespuestaRecomendacion:
 
 @dataclass(frozen=True)
 class EfectoContrafactual:
-    artista_usuario: str
+    artista_usuario: str  # nombre del artista, apodo del amigo o "todos tus amigos" (según tipo)
     posicion_original: int  # 1..10
     posicion_sin_artista: int | None  # None = queda fuera de los candidatos
     puntaje_sin_artista: float | None
+    tipo: TipoEfecto = "artista"
 
 
 @dataclass(frozen=True)
@@ -73,6 +80,7 @@ MotivoNo = Literal[
     "ya_en_entrada",
     "no_en_catalogo",
     "no_conectado",
+    "no_conectado_ni_por_amigos",
     "descartado_por_regla",
     "puntaje_insuficiente",
     "desplazado_por_diversidad",
@@ -91,8 +99,25 @@ class PorQueNoDTO:
     explicacion: str
 
 
+@dataclass(frozen=True)
+class PerfilDTO:
+    apodo: str
+    artistas: tuple[EntradaArtista, ...]
+    comparte_gustos: bool  # consentimiento explícito; falso por defecto
+
+
+@dataclass(frozen=True)
+class AmigoDTO:
+    apodo: str
+    comparte_gustos: bool  # sus gustos solo se usan y se nombran si es verdadero
+
+
 # menos de 5 o más de 20 artistas, pesos fuera de rango, duplicados
 class ErrorEntradaInvalida(ValueError): ...
+
+
+# apodo inválido o inexistente, autoamistad, amistad repetida o inexistente
+class ErrorPerfil(ErrorEntradaInvalida): ...
 
 
 class RecomendarArtistas(Protocol):
@@ -115,3 +140,13 @@ class RegistrarFeedback(Protocol):
     def registrar(
         self, sesion_id: str, artista_id: int, valoracion: Literal[-1, 1], estrategia: Estrategia
     ) -> None: ...
+
+
+class GestionarPerfiles(Protocol):
+    def guardar_perfil(
+        self, apodo: str, artistas: tuple[EntradaArtista, ...], comparte_gustos: bool
+    ) -> PerfilDTO: ...
+    def obtener_perfil(self, apodo: str) -> PerfilDTO: ...
+    def agregar_amigo(self, apodo: str, apodo_amigo: str) -> None: ...
+    def quitar_amigo(self, apodo: str, apodo_amigo: str) -> None: ...
+    def listar_amigos(self, apodo: str) -> tuple[AmigoDTO, ...]: ...
