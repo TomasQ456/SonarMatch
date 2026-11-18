@@ -95,7 +95,8 @@ cp .env.example .env   # y completa las variables
 
 ```bash
 # Ingesta real (≈5.000 artistas; reanudable: las respuestas quedan en la tabla api_cache)
-python -m sonarmatch.adapters.inbound.cli ingest [--objetivo 5000] [--sin-musicbrainz]
+python -m sonarmatch.adapters.inbound.cli ingest [--objetivo 5000] [--sin-musicbrainz] \
+    [--semillas-hetrec data/hetrec2011-lastfm-2k]   # siembra también con los más escuchados de HetRec
 # Sin API key: catálogo SINTÉTICO de demostración (51 artistas)
 python -m sonarmatch.adapters.inbound.cli ingest --fixture
 
@@ -107,6 +108,8 @@ python -m sonarmatch.adapters.inbound.cli recommend "Slowdive:5" "Low:4" "Beach 
 
 # Evaluación (HetRec 2011, ver data/README.md) y calibración
 python -m sonarmatch.adapters.inbound.cli evaluate [--dataset hetrec|csv] [--ruta ...]
+# Evaluación de la dimensión social (HetRec con user_friends.dat); guarda β en los parámetros
+python -m sonarmatch.adapters.inbound.cli evaluate-social
 
 # Mapeo de etiquetas reales (HetRec) contra Wikidata, sin API key de Last.fm
 python scripts/mapeo_hetrec.py
@@ -226,6 +229,7 @@ semántica aunque no se compartan etiquetas exactas, por ejemplo entre shoegaze 
 | R4 `perfil_mainstream` | perfil | Si esa mediana está por encima del percentil 75, se infiere ajuste(c, −0,1). |
 | R5 `genero_incompatible` | candidatos | Si la mayor sim_wp entre los géneros del candidato y los del perfil es < θ₅ (0,2), se infiere descartar(c). Solo en la estrategia principal. |
 | R6 `perfil_eclectico` | perfil | Si la sim_wp media entre los 5 géneros principales del perfil es < θ₆ (0,3), se infiere ajuste(λ, −0,1), es decir, más diversidad. |
+| R7 `exploracion_social` | perfil | Si 2 o más amigos que comparten sus gustos tienen el género G con peso ≥ θ₇ (0,15) y G no está en el perfil del usuario, se infiere explorar(G) y los 20 mejores artistas de G por S_tags pasan a ser candidatos, como en R2 (ver «Dimensión social»). |
 
 Los ajustes de R3, R4 y R6 se suman, se acotan a [0, 1] y a + b + c + d se renormaliza a 1. Solo
 se aplican cuando la solicitud no trae parámetros; si los trae, se respetan y la cadena lo indica.
@@ -321,6 +325,60 @@ redundante (ILS de 0,129 a 0,173) y sin P_nov es más popular (novedad de 0,392 
 de 9 ms (p95) por consulta y de 37 ms (p95) por contrafactual en este catálogo; el benchmark
 sintético de 5.000 nodos verifica los límites de 3 s y 1,5 s.
 
+## Dimensión social
+
+Hipótesis: los gustos de los amigos de un usuario ayudan a acotar los suyos. Se implementó de forma
+que se pueda medir y apagar (β = 0 reproduce exactamente el sistema anterior), y se evalúa sin forzar
+el resultado.
+
+- **Amigos dentro de SonarMatch, no de Facebook.** La API de Facebook ya no entrega datos de música,
+  los «me gusta» requieren revisión de la app y la lista de amigos solo incluye a quienes también la
+  usan. Por eso los amigos son otros perfiles de SonarMatch, identificados por un **apodo** único
+  (`perfiles` y `amistades` en SQLite; la amistad es bidireccional, sin duplicados ni autoamistad).
+- **Consentimiento explícito.** `comparte_gustos` vale falso por defecto. Solo los amigos que
+  comparten influyen en el puntaje, se nombran en las explicaciones o en R7 y aparecen en los
+  contrafactuales. El filtro se aplica en la capa de aplicación (`ServicioPerfiles.amigos_que_comparten`),
+  así que el dominio nunca recibe a un amigo que no consintió. `listar_amigos` nunca muestra artistas, y
+  `obtener_perfil` solo devuelve los artistas de un perfil que comparte.
+- **Semillas sociales en PPR.** El vector de personalización pasa a ser
+  s = (1 − β)·s_propio + β·s_amigos, donde s_amigos es el promedio de los perfiles de los amigos que
+  comparten, cada uno construido igual que el del usuario. Sin amigos que compartan, β = 0. Por
+  linealidad no se recalcula PPR por amigo: cada amigo se resume en un vector v_f = Σ_j w_fj·PPR_j hecho
+  con columnas de PPR que se reutilizan (caché por artista semilla), y el PPR total es
+  (1 − β)·PPR_propio + Σ_f (β/F)·v_f. Solo se excluyen de los candidatos los artistas del usuario; los de
+  sus amigos sí se pueden recomendar.
+- **Aporte social exacto.** El término de grafo de cada candidato se reparte entre `s_grafo` y
+  `s_social` en proporción a su contribución sin normalizar, así que `s_grafo + s_social` es el término
+  de grafo y los aportes siguen sumando el puntaje. La explicación nombra a los amigos que más
+  aportaron: «El 35 % viene de lo que escuchan ana_m y juanp».
+- **R7 `exploracion_social`** (tabla de reglas) entra en la cadena de inferencia:
+  «R7: ana_m y juanp escuchan post-rock → exploré post-rock».
+- **Contrafactuales sociales:** «sin tus amigos» (β = 0) y «sin el amigo X», sobre las mismas
+  columnas de PPR. En «¿por qué no?» se añade el motivo `no_conectado_ni_por_amigos`.
+- **β** vale 0,25 por defecto, se calibra en validación con `evaluate-social` y se puede mover en la
+  interfaz.
+
+### Evaluación social
+
+`python -m sonarmatch.adapters.inbound.cli evaluate-social` (`sonarmatch/evaluation/social.py`):
+
+- **Subconjunto:** usuarios evaluables de HetRec con al menos un amigo en `user_friends.dat`
+  (formato verificado: TSV con CRLF, 25.434 pares ya simétricos; los 1.892 usuarios tienen al menos un
+  amigo). Mismo split 70/30 y misma semilla que el protocolo base; todos los amigos se consideran con
+  consentimiento.
+- **Sin fuga:** a cada usuario se le ocultan los mismos artistas que en el protocolo base, y los
+  ocultos nunca entran como semillas propias. A los amigos no se les quita nada: su información es
+  legítima aunque incluya artistas ocultos del usuario, y eso es justamente lo que se pone a prueba.
+- **Calibración:** β ∈ {0; 0,1; 0,25; 0,5; 0,75} solo en validación, por P@10.
+- **Comparación en prueba:** β = 0 (sistema actual), β calibrado y β calibrado sin R7, con P@10, R@10,
+  novedad e ILS, en total y por cantidad de amigos activos (1–2, 3–5, más de 5). La diferencia de P@10
+  se acompaña de un intervalo bootstrap pareado del 95 %, y la conclusión del reporte depende de él:
+  mejora, empeora o **no hay mejora demostrable**.
+- **Indicadores para la discusión:** homofilia (qué fracción de los artistas ocultos de un usuario
+  está en el perfil de algún amigo) y dispersión del grafo social (amigos activos por usuario).
+
+> **Resultados:** pendientes del catálogo real (ver «Limitaciones»).
+
 ## Calidad
 
 **Resultados finales** (`python scripts/check.py` sobre `main` integrado):
@@ -393,6 +451,11 @@ demostración (`ingest --fixture`):
   librería externa dificultaría reconstruir la cadena exacta y añadiría una dependencia.
 
 ## Limitaciones y trabajo futuro
+
+- **Sin autenticación:** el apodo es la identidad y no hay contraseñas. Quien conoce un apodo puede
+  reemplazar ese perfil y, si comparte sus gustos, cargar sus artistas. Es aceptable en un prototipo
+  académico; en producción haría falta una cuenta con inicio de sesión y amistades con aceptación
+  mutua (hoy agregar a alguien lo agrega en ambos sentidos).
 
 - **Ingesta real pendiente:** sin API key de Last.fm, la app y la evaluación se demostraron con el
   catálogo sintético. El código de ingesta está probado con respuestas simuladas.
