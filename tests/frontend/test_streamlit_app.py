@@ -451,12 +451,13 @@ def test_guardar_y_cargar_perfil_y_consentimiento(monkeypatch: MonkeyPatch) -> N
     assert guardado.comparte_gustos is True
     assert guardado.artistas[0] == EntradaArtista(nombre=seleccion[0], peso=4.5)
 
-    # Cargar el perfil de ejemplo "solo" (sin consentimiento)
-    at.text_input(key="apodo_usuario").set_value("solo").run()
+    # Cargar el perfil de ejemplo "demo" (que comparte sus gustos)
+    at.text_input(key="apodo_usuario").set_value("demo").run()
     at.button(key="btn_cargar_perfil").click().run()
     assert not at.exception
-    assert at.checkbox(key="comparte_gustos").value is False
-    assert at.multiselect(key="artistas_seleccionados").value == list(ENTRADA_FALSA[8:14])
+    assert at.checkbox(key="comparte_gustos").value is True
+    assert at.multiselect(key="artistas_seleccionados").value == list(ENTRADA_FALSA[:8])
+    assert at.slider(key=f"peso_{seleccion[0]}").value == pytest.approx(3.0)
 
     # Volver a cargar "nuevo_usr" restaura artistas, pesos y consentimiento
     at.text_input(key="apodo_usuario").set_value("nuevo_usr").run()
@@ -474,6 +475,31 @@ def test_guardar_y_cargar_perfil_y_consentimiento(monkeypatch: MonkeyPatch) -> N
     at.text_input(key="apodo_usuario").set_value("a").run()
     at.button(key="btn_guardar_perfil").click().run()
     assert any("entre 3 y 30 caracteres" in e.value for e in at.error)
+
+
+def test_cargar_perfil_privado_conserva_seleccion_y_muestra_aviso(
+    monkeypatch: MonkeyPatch,
+) -> None:
+    at, _ = _crear_apptest(monkeypatch)
+    seleccion = list(ENTRADA_FALSA[:6])
+    at.multiselect(key="artistas_seleccionados").set_value(seleccion).run()
+    at.slider(key=f"peso_{seleccion[0]}").set_value(4.5).run()
+    at.checkbox(key="comparte_gustos").set_value(True).run()
+
+    # "solo" existe pero no comparte sus gustos: obtener_perfil devuelve artistas=()
+    at.text_input(key="apodo_usuario").set_value("solo").run()
+    at.button(key="btn_cargar_perfil").click().run()
+    assert not at.exception
+    assert at.checkbox(key="comparte_gustos").value is False
+    assert at.multiselect(key="artistas_seleccionados").value == seleccion
+    assert at.slider(key=f"peso_{seleccion[0]}").value == pytest.approx(4.5)
+    assert len(at.success) == 0
+    assert len(at.warning) == 1
+    aviso = at.warning[0].value
+    assert "solo" in aviso
+    assert "no se pueden cargar por apodo" in aviso
+    assert "no hay contraseñas" in aviso
+    assert "volver a elegirlos y guardar" in aviso
 
 
 def test_amigos_agregar_listar_quitar_y_errores(monkeypatch: MonkeyPatch) -> None:
@@ -593,10 +619,12 @@ def test_comportamiento_con_beta_cero_sin_amigos_y_apodo_inexistente(
     assert "Sin tus amigos" not in texto_tabla
     assert "Sin el amigo" not in texto_tabla
 
-    # Con apodo="solo" (sin amigos) y parámetros por defecto: sin aporte social
+    # Con apodo="solo" (privado, sin amigos) y parámetros por defecto: conserva selección
     at.button(key="btn_restablecer_parametros").click().run()
     at.text_input(key="apodo_usuario").set_value("solo").run()
     at.button(key="btn_cargar_perfil").click().run()
+    assert at.multiselect(key="artistas_seleccionados").value == list(ENTRADA_FALSA[:8])
+    assert any("no se pueden cargar por apodo" in w.value for w in at.warning)
     assert any("Aún no tienes amigos en tu lista." in c.value for c in at.caption)
     at.button(key="btn_recomendar").click().run()
 

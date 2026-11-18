@@ -148,6 +148,14 @@ def _procesar_cargar_perfil(perfiles: GestionarPerfiles, apodo: str) -> None:
         return
 
     st.session_state["comparte_gustos"] = bool(perfil.comparte_gustos)
+    if not perfil.artistas:
+        st.warning(
+            f"El perfil «{perfil.apodo}» es privado: los artistas de un perfil privado "
+            "no se pueden cargar por apodo (no hay contraseñas). Puedes volver a elegirlos "
+            "y guardar."
+        )
+        return
+
     st.session_state["artistas_seleccionados"] = [e.nombre for e in perfil.artistas]
     for entrada in perfil.artistas:
         st.session_state[f"peso_{entrada.nombre}"] = float(entrada.peso)
