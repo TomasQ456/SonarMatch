@@ -233,10 +233,10 @@ def _ejecutar_cambio_amistad(
     try:
         if agregar:
             perfiles.agregar_amigo(apodo, apodo_amigo)
-            st.success(f"Se agregó a «{apodo_amigo.strip().casefold()}» a tus amigos.")
+            st.success(f"Se agregó a «{apodo_amigo}» a tus amigos.")
         else:
             perfiles.quitar_amigo(apodo, apodo_amigo)
-            st.success(f"Se quitó a «{apodo_amigo.strip().casefold()}» de tus amigos.")
+            st.success(f"Se quitó a «{apodo_amigo}» de tus amigos.")
     except ErrorEntradaInvalida as exc:
         st.error(str(exc))
     except Exception:

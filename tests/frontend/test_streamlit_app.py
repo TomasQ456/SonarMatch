@@ -539,10 +539,12 @@ def test_amigos_agregar_listar_quitar_y_errores(monkeypatch: MonkeyPatch) -> Non
     assert any("Se quitó a «solo» de tus amigos." in s.value for s in at.success)
     assert "**solo**" not in "\n".join(m.value for m in at.markdown)
 
-    # Volver a agregar y quitar mediante el botón general "Quitar amigo"
-    at.text_input(key="apodo_amigo_input").set_value("solo").run()
+    # Volver a agregar y quitar con mayúsculas: el mensaje conserva lo escrito sin normalizar en UI
+    at.text_input(key="apodo_amigo_input").set_value("Solo").run()
     at.button(key="btn_agregar_amigo").click().run()
+    assert any("Se agregó a «Solo» a tus amigos." in s.value for s in at.success)
     at.button(key="btn_quitar_amigo").click().run()
+    assert any("Se quitó a «Solo» de tus amigos." in s.value for s in at.success)
     assert "**solo**" not in "\n".join(m.value for m in at.markdown)
 
     # Errores de ErrorPerfil: autoamistad, amistad duplicada, quitar no amigo y amigo inexistente
