@@ -4,6 +4,10 @@ Opción A: HetRec 2011 Last.fm 2K (GroupLens). Formato verificado sobre los arch
 - ``artists.dat``: TSV UTF-8 con cabecera ``id, name, url, pictureURL``;
 - ``user_artists.dat``: TSV con cabecera ``userID, artistID, weight`` (fin de línea CRLF);
   ``weight`` es el número de reproducciones del par usuario-artista.
+- ``user_friends.dat``: TSV con cabecera ``userID, friendID`` (fin de línea CRLF). En los
+  archivos reales hay 25.434 filas que ya traen cada amistad en los dos sentidos (100 %
+  simétricas), sin duplicados ni autorrelaciones, y los 1.892 usuarios tienen al menos un amigo.
+  Igual se simetriza y se descartan autorrelaciones por si cambia la fuente.
 Opción B: CSV con cabecera ``user_id,artist_name,peso``.
 
 Los artistas se emparejan con el catálogo por nombre normalizado; los usuarios con menos de
@@ -86,6 +90,22 @@ def leer_hetrec(directorio: Path) -> list[tuple[str, str, float]]:
             if nombre is not None:
                 salida.append((fila["userID"], nombre, float(fila["weight"])))
     return salida
+
+
+def leer_amigos_hetrec(directorio: Path) -> dict[str, frozenset[str]]:
+    """Amistades de ``user_friends.dat`` como relación simétrica y sin autorrelaciones."""
+    amigos: dict[str, set[str]] = defaultdict(set)
+    with (directorio / "user_friends.dat").open(encoding="utf-8", newline="") as f:
+        lector = csv.DictReader(f, delimiter="\t", quoting=csv.QUOTE_NONE)
+        faltan = {"userID", "friendID"} - set(lector.fieldnames or ())
+        if faltan:
+            raise ValueError(f"user_friends.dat: faltan columnas {sorted(faltan)}")
+        for fila in lector:
+            a, b = fila["userID"].strip(), fila["friendID"].strip()
+            if a and b and a != b:
+                amigos[a].add(b)
+                amigos[b].add(a)
+    return {u: frozenset(v) for u, v in amigos.items()}
 
 
 def leer_csv(ruta: Path) -> list[tuple[str, str, float]]:

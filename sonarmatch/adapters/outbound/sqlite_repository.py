@@ -11,10 +11,12 @@ from typing import Literal
 from sonarmatch.domain.models import (
     Artista,
     Catalogo,
+    EntradaPerfil,
     EstrategiaId,
     Genero,
     MapeoEtiqueta,
     MetodoMapeo,
+    PerfilGuardado,
 )
 from sonarmatch.domain.textos import normalizar_nombre
 
@@ -74,11 +76,29 @@ CREATE TABLE IF NOT EXISTS feedback (
     created_at REAL NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_tags_artist ON artist_tags(artist_id);
+CREATE TABLE IF NOT EXISTS perfiles (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    apodo TEXT NOT NULL UNIQUE COLLATE NOCASE,
+    artistas_json TEXT NOT NULL,
+    comparte_gustos INTEGER NOT NULL DEFAULT 0 CHECK (comparte_gustos IN (0, 1)),
+    creado_en REAL NOT NULL,
+    actualizado_en REAL NOT NULL
+);
+-- Cada amistad se guarda una vez como par ordenado (a < b) y se lee en ambos sentidos:
+-- así no hay duplicados (a, b)/(b, a) ni autorrelaciones.
+CREATE TABLE IF NOT EXISTS amistades (
+    perfil_a INTEGER NOT NULL REFERENCES perfiles(id) ON DELETE CASCADE,
+    perfil_b INTEGER NOT NULL REFERENCES perfiles(id) ON DELETE CASCADE,
+    creada_en REAL NOT NULL,
+    PRIMARY KEY (perfil_a, perfil_b),
+    CHECK (perfil_a < perfil_b)
+);
+CREATE INDEX IF NOT EXISTS idx_amistades_b ON amistades(perfil_b);
 """
 
 
 class RepositorioSQLite:
-    """Implementa RepositorioCatalogo y RepositorioEvaluaciones, y el caché de la ingesta."""
+    """Implementa RepositorioCatalogo, RepositorioEvaluaciones, RepositorioPerfiles y el caché."""
 
     def __init__(self, ruta: str | Path) -> None:
         self.ruta = str(ruta)
@@ -264,6 +284,71 @@ class RepositorioSQLite:
                     "SELECT session_id, artist_id, rating, strategy FROM feedback ORDER BY id"
                 )
             ]
+
+    # ------------------------------------------------------------------ perfiles y amistades
+    def obtener_perfil(self, apodo: str) -> PerfilGuardado | None:
+        with self.conexion() as con:
+            fila = con.execute(
+                "SELECT id, apodo, artistas_json, comparte_gustos FROM perfiles WHERE apodo = ?",
+                (apodo,),
+            ).fetchone()
+        return None if fila is None else _perfil(fila)
+
+    def guardar_perfil(
+        self, apodo: str, artistas: tuple[EntradaPerfil, ...], comparte_gustos: bool
+    ) -> PerfilGuardado:
+        ahora = time.time()
+        datos = json.dumps([[a.nombre, a.peso] for a in artistas], ensure_ascii=False)
+        with self.conexion() as con:
+            con.execute(
+                "INSERT INTO perfiles (apodo, artistas_json, comparte_gustos, creado_en, "
+                "actualizado_en) VALUES (?, ?, ?, ?, ?) ON CONFLICT(apodo) DO UPDATE SET "
+                "artistas_json = excluded.artistas_json, "
+                "comparte_gustos = excluded.comparte_gustos, "
+                "actualizado_en = excluded.actualizado_en",
+                (apodo, datos, int(comparte_gustos), ahora, ahora),
+            )
+            fila = con.execute(
+                "SELECT id, apodo, artistas_json, comparte_gustos FROM perfiles WHERE apodo = ?",
+                (apodo,),
+            ).fetchone()
+        if fila is None:
+            raise RuntimeError(f"No se pudo guardar el perfil {apodo!r}.")
+        return _perfil(fila)
+
+    def agregar_amistad(self, perfil_a: int, perfil_b: int) -> bool:
+        if perfil_a == perfil_b:
+            return False
+        with self.conexion() as con:
+            cursor = con.execute(
+                "INSERT OR IGNORE INTO amistades (perfil_a, perfil_b, creada_en) VALUES (?, ?, ?)",
+                (min(perfil_a, perfil_b), max(perfil_a, perfil_b), time.time()),
+            )
+            return cursor.rowcount == 1
+
+    def quitar_amistad(self, perfil_a: int, perfil_b: int) -> bool:
+        with self.conexion() as con:
+            cursor = con.execute(
+                "DELETE FROM amistades WHERE perfil_a = ? AND perfil_b = ?",
+                (min(perfil_a, perfil_b), max(perfil_a, perfil_b)),
+            )
+            return cursor.rowcount == 1
+
+    def amigos(self, perfil: int) -> list[PerfilGuardado]:
+        with self.conexion() as con:
+            filas = con.execute(
+                "SELECT p.id, p.apodo, p.artistas_json, p.comparte_gustos FROM perfiles p "
+                "JOIN amistades a ON (a.perfil_a = ? AND p.id = a.perfil_b) "
+                "OR (a.perfil_b = ? AND p.id = a.perfil_a) ORDER BY p.apodo",
+                (perfil, perfil),
+            ).fetchall()
+        return [_perfil(f) for f in filas]
+
+
+def _perfil(fila: tuple[object, ...]) -> PerfilGuardado:
+    ident, apodo, datos, comparte = fila
+    artistas = tuple(EntradaPerfil(str(n), float(w)) for n, w in json.loads(str(datos)))
+    return PerfilGuardado(int(str(ident)), str(apodo), artistas, bool(comparte))
 
 
 def _metodo(valor: str) -> MetodoMapeo:

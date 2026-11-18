@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from sonarmatch.adapters.outbound.sqlite_repository import RepositorioSQLite
-from sonarmatch.application.perfiles import PerfilesNoDisponibles
+from sonarmatch.application.perfiles import PerfilesNoDisponibles, ServicioPerfiles
 from sonarmatch.application.recommend_service import ServicioRecomendacion
 from sonarmatch.config import RUTA_CALIBRADOS, ConfigMotor
 from sonarmatch.domain.indice import IndiceCatalogo
@@ -53,4 +53,10 @@ def crear_servicios(db_path: str, config_path: str | None = None) -> Servicios:
         IndiceCatalogo.construir(repo.cargar_catalogo()), ConfigMotor.desde_json(ruta)
     )
     servicio = ServicioRecomendacion(motor, repo)
-    return Servicios(recomendar=servicio, catalogo=servicio, explicar=servicio, feedback=servicio)
+    return Servicios(
+        recomendar=servicio,
+        catalogo=servicio,
+        explicar=servicio,
+        feedback=servicio,
+        perfiles=ServicioPerfiles(repo),
+    )
