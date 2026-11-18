@@ -645,10 +645,15 @@ def test_comportamiento_con_beta_cero_sin_amigos_y_apodo_inexistente(
     assert recomendador.llamadas[-1].parametros is None
     assert "**Amigos origen:**" not in "\n".join(m.value for m in at.markdown)
 
-    # Con apodo inexistente al recomendar: muestra ErrorPerfil
+    # Con apodo inexistente al recomendar: muestra ErrorPerfil y la pista de acción
     at.text_input(key="apodo_usuario").set_value("apodo_fantasma").run()
     at.button(key="btn_recomendar").click().run()
     assert any("No existe un perfil con el apodo «apodo_fantasma»" in e.value for e in at.error)
+    assert any(
+        'Guarda tu perfil en "Mi perfil" o deja el apodo vacío para recomendar sin amigos.'
+        in e.value
+        for e in at.error
+    )
 
 
 def test_mensaje_claro_cuando_falta_base_de_datos(monkeypatch: MonkeyPatch, tmp_path: Path) -> None:

@@ -24,6 +24,7 @@ from sonarmatch.adapters.inbound.ui.presentadores import construir_solicitud
 from sonarmatch.bootstrap import Servicios, crear_servicios
 from sonarmatch.ports.inbound import (
     ErrorEntradaInvalida,
+    ErrorPerfil,
     ParametrosMotor,
     RespuestaRecomendacion,
     SolicitudRecomendacion,
@@ -70,6 +71,12 @@ def _ejecutar_recomendacion(
     solicitud = construir_solicitud(entradas, parametros=parametros, apodo=apodo)
     try:
         respuesta = servicios.recomendar.recomendar(solicitud)
+    except ErrorPerfil as exc:
+        st.error(
+            f'{exc} Guarda tu perfil en "Mi perfil" o deja el apodo vacío '
+            "para recomendar sin amigos."
+        )
+        return
     except ErrorEntradaInvalida as exc:
         st.error(str(exc))
         return
