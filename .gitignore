@@ -20,3 +20,4 @@ data/*
 # Logs de agentes (la tarea y el reporte sí se versionan).
 docs/agentes/
 reviews/
+reports/*.log

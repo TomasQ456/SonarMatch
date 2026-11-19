@@ -216,4 +216,6 @@ def test_discusion_de_homofilia_y_dispersion(
     assert esperado in texto
     assert "Mediana de 3 amigos activos" in texto
     assert "2 no tienen ninguno" in texto
+    sin_vacios = ResultadoSocial("t", 7, 3, beta, {}, [], 0.0, ic, homofilia, 3.0, 0)
+    assert "todos tienen al menos uno" in "\n".join(discusion(sin_vacios))
     assert "## Discusión" in markdown_social(res)

@@ -1,0 +1,51 @@
+etiqueta,genero_id,genero,confianza,correcto
+aternative,Q1695023,alternative music,0.95,sí
+atmospheric death doom metal,Q25419984,atmospheric death metal,0.90,sí
+atmospheric doom death metal,Q25419984,atmospheric death metal,0.90,sí
+avantgarde,Q2332751,avant-garde music,0.95,sí
+avantgarde jazz,Q790188,avant-garde jazz,0.97,sí
+black n roll,Q108297198,black 'n' roll,0.92,sí
+blackmusic,Q388207,African-American music,0.95,sí
+boleros,Q15830404,bolero,0.92,sí
+canadian black metal,Q131853889,Cascadian black metal,0.93,no
+cumbia de argentina,Q4789437,Argentine cumbia,0.91,sí
+detroit rap,Q106839650,Detroit sound,0.96,no
+dubreggae,Q121840759,dub reggae,0.95,sí
+electro-acoustic,Q1326777,electroacoustic music,0.97,sí
+electrofunk,Q1325963,electro funk,0.96,sí
+eletronic,Q9778,electronic music,0.95,sí
+emopop,Q3724735,emo pop,0.92,sí
+horrorpunk,Q830325,horror punk,0.95,sí
+industrial dub,Q110584483,industrial drum and bass,0.93,no
+lofi indie,Q108123046,slacker rock,0.95,no
+mathpop,Q113676976,math pop,0.93,sí
+melancholic-music,Q16130554,muzikat dika'on,0.91,no
+minimalistic,Q572901,minimalist music,0.91,sí
+mississippi hill country blues,Q5762403,hill country blues,0.91,sí
+musica latinoamericana,Q727781,music of Latin America,0.95,sí
+neue deutsche haerte,Q213572,Neue Deutsche Härte,0.97,sí
+new grass,Q3307225,progressive bluegrass,0.94,sí
+nueva copla,Q9051097,Nueva ola,0.90,no
+postpunk,Q598929,post-punk,0.94,sí
+psychadelic,Q846119,psychedelic music,0.91,sí
+raggae,Q740911,ragga,0.91,no
+ramonescore,Q11890008,ramopunk,0.96,sí
+riot grrrr,Q677542,riot grrrl,0.90,sí
+robot rock,Q1929352,roots rock,0.90,no
+rock en espanol,Q2994332,rock en español,0.93,sí
+rock'n roll,Q7749,rock and roll,0.96,sí
+romania,Q1268283,Romani music,0.92,no
+romanian,Q109332430,Aromanian music,0.94,no
+romanticism,Q207591,Romantic music,0.96,sí
+sertanejo universitario,Q10370558,sertanejo universitário,0.96,sí
+shonan,Q7500354,Shona music,0.91,no
+singer song writer,Q89363113,singer-songwriter music,0.97,sí
+slow jams,Q476091,slow jam,0.94,sí
+soundtracks,Q107736421,soundtrack,0.95,sí
+spacerock,Q236913,space rock,0.95,sí
+strange music,Q7777494,theatre music,0.92,no
+synthfunk,Q30632022,synth funk,0.95,sí
+tanz metal,Q213572,Neue Deutsche Härte,0.90,sí
+themes,Q1193470,theme music,0.91,sí
+traditional,Q235858,traditional folk music,0.91,sí
+triples,Q109713928,tribal psytrance,0.93,no

@@ -292,38 +292,53 @@ este orden:
   rango dentro de cada usuario.
 - **Protocolo:** 70 % validación / 30 % prueba con semilla fija. A cada usuario se le oculta el
   20 % de sus artistas (mínimo 2) y se recomienda con el resto.
-- **Ajuste:** grid search de a, b, c, d (símplex con paso 0,1 y los cuatro pesos > 0, para que
-  cada ablación quite algo), λ ∈ {0,5; 0,7; 0,9} y τ ∈ {0; 0,05; 0,1}, **solo en validación** y
-  optimizando P@10. Los parámetros elegidos se guardan en `reports/parametros_calibrados.json`,
-  que la app carga.
+- **Ajuste:** grid search de a, b, c, d (símplex con los cuatro pesos > 0, para que cada ablación
+  quite algo, más la configuración por defecto), λ ∈ {0,5; 0,7; 0,9} y τ ∈ {0; 0,05; 0,1}, **solo en
+  validación** y optimizando P@10. Los parámetros elegidos se guardan en
+  `reports/parametros_calibrados.json`, que la app carga. Con el catálogo real se usó
+  `--paso 0,2` (37 configuraciones) con los 1.286 usuarios de validación: la grilla de paso 0,1
+  (757 configuraciones) habría tardado unas 5,4 horas, y una submuestra de usuarios introduce más
+  ruido que el que quita una grilla más fina.
 - **Métricas:** P@10, R@10, novedad (percentil medio de oyentes; menor es más nicho), ILS (coseno
   TF-IDF medio entre pares), cobertura del catálogo, activación de cada respaldo, disparo de cada
   regla, cobertura del mapeo y latencias p50/p95 de la recomendación y p95 del contrafactual.
 - **Comparación en prueba:** línea base de popularidad, sistema completo y siete ablaciones.
 
-> **Estado de los resultados.** No hubo API key de Last.fm, así que no se hizo la ingesta real
-> del catálogo de 5.000 artistas. La tabla siguiente sale de `reports/resultados.md`, generado
-> sobre el catálogo **sintético** de demostración (51 artistas) con los usuarios reales de HetRec
-> que se emparejan con él: solo 11 usuarios (8 de validación y 3 de prueba). Sirve para comprobar
-> que el protocolo funciona de punta a punta, **no** para sacar conclusiones. Con la API key, la
-> ingesta y `evaluate` producen la tabla real con el mismo comando.
+**Resultados** (`reports/resultados.md`): catálogo real de 5.000 artistas (Last.fm, sembrado con
+los 1.000 artistas más escuchados de HetRec), 1.837 usuarios de HetRec con al menos 8 artistas
+emparejados: 1.286 en validación y 551 en prueba. La calibración no encontró nada mejor que la
+configuración por defecto (a = 0,30, b = 0,35, c = 0,15, d = 0,20, λ = 0,7) y eligió τ = 0,05.
 
 | Sistema | P@10 | R@10 | Novedad ↓ | ILS | Cobertura |
 |---|---:|---:|---:|---:|---:|
-| línea base: popularidad | 0,100 | 0,500 | 0,895 | 0,063 | 23,5 % |
-| sistema completo | 0,133 | 0,667 | 0,392 | 0,129 | 43,1 % |
-| sin S_tags | 0,133 | 0,667 | 0,292 | 0,126 | 39,2 % |
-| sin S_grafo | 0,133 | 0,667 | 0,392 | 0,129 | 43,1 % |
-| sin P_nov | 0,133 | 0,667 | 0,458 | 0,120 | 49,0 % |
-| sin S_onto | 0,133 | 0,667 | 0,380 | 0,105 | 41,2 % |
-| sin reglas | 0,133 | 0,667 | 0,383 | 0,126 | 43,1 % |
-| sin MMR | 0,133 | 0,667 | 0,348 | 0,173 | 41,2 % |
-| sin respaldo | 0,133 | 0,667 | 0,392 | 0,129 | 43,1 % |
+| línea base: popularidad | 0,045 | 0,059 | 0,999 | 0,140 | 0,3 % |
+| **sistema completo** | **0,084** | **0,125** | 0,689 | 0,395 | 28,6 % |
+| sin S_tags | 0,076 | 0,114 | 0,657 | 0,258 | 27,6 % |
+| sin S_grafo | 0,033 | 0,053 | 0,553 | 0,439 | 30,5 % |
+| sin P_nov | 0,092 | 0,139 | 0,724 | 0,426 | 27,8 % |
+| sin S_onto | 0,086 | 0,128 | 0,685 | 0,451 | 28,0 % |
+| sin reglas | 0,074 | 0,113 | 0,627 | 0,387 | 28,7 % |
+| sin MMR | 0,090 | 0,134 | 0,699 | 0,683 | 26,8 % |
+| sin respaldo | 0,084 | 0,125 | 0,689 | 0,395 | 28,6 % |
 
-Aun con esta muestra, dos efectos mecánicos se ven como se esperaba: sin MMR la lista es más
-redundante (ILS de 0,129 a 0,173) y sin P_nov es más popular (novedad de 0,392 a 0,458). La latencia es
-de 9 ms (p95) por consulta y de 37 ms (p95) por contrafactual en este catálogo; el benchmark
-sintético de 5.000 nodos verifica los límites de 3 s y 1,5 s.
+Lectura:
+
+- El sistema casi **duplica** la precisión de la línea base de popularidad (P@10 0,084 frente a
+  0,045) y recomienda artistas mucho menos obvios (novedad 0,689 frente a 0,999) y más variados
+  (cobertura del 28,6 % del catálogo frente al 0,3 %).
+- **S_grafo es el término clave:** sin él, P@10 cae a 0,033. Las **reglas** también aportan
+  precisión (0,074 sin ellas), y S_tags un poco.
+- **P_nov, S_onto y MMR cambian precisión por otra cosa**, como se buscaba: sin P_nov la precisión
+  sube a 0,092 pero las recomendaciones son más populares (0,724); sin MMR sube a 0,090 pero la lista
+  es mucho más redundante (ILS de 0,395 a 0,683); sin S_onto la diferencia de precisión es mínima y la
+  lista es más homogénea en etiquetas (ILS 0,451).
+- Los **respaldos** no se activan nunca: con el catálogo real todos los usuarios tienen suficientes
+  artistas conectados en el grafo.
+- Reglas: R4 (perfil mainstream) se dispara en el 89,8 % de las consultas, porque los usuarios de
+  HetRec escuchan sobre todo artistas populares; R6 en el 17,6 % y R1/R2 en el 8,2 %. R3 y R5 no se
+  disparan con estos usuarios.
+- **Latencia:** p50 de 42 ms y p95 de 78 ms por consulta; p95 de 612 ms por contrafactual (límites:
+  3 s y 1,5 s).
 
 ## Dimensión social
 
@@ -377,7 +392,47 @@ el resultado.
 - **Indicadores para la discusión:** homofilia (qué fracción de los artistas ocultos de un usuario
   está en el perfil de algún amigo) y dispersión del grafo social (amigos activos por usuario).
 
-> **Resultados:** pendientes del catálogo real (ver «Limitaciones»).
+**Resultados** (`reports/resultados_social.md`, 1.286 usuarios en validación y 551 en prueba; todos
+tienen al menos un amigo con artistas en el catálogo, con una mediana de 6):
+
+| β (validación) | 0 | 0,1 | 0,25 | **0,5** | 0,75 |
+|---|---:|---:|---:|---:|---:|
+| P@10 | 0,089 | 0,101 | 0,118 | **0,131** | 0,128 |
+
+| Amigos activos | Sistema | Usuarios | P@10 | R@10 | Novedad ↓ | ILS |
+|---|---|---:|---:|---:|---:|---:|
+| todos | actual (β = 0) | 551 | 0,084 | 0,125 | 0,689 | 0,395 |
+| todos | **con amigos (β = 0,5)** | 551 | **0,134** | **0,190** | 0,765 | 0,298 |
+| todos | con amigos sin R7 (β = 0,5) | 551 | 0,135 | 0,191 | 0,767 | 0,301 |
+| 1–2 | actual / con amigos | 119 | 0,066 / 0,084 | 0,107 / 0,133 | 0,686 / 0,763 | 0,360 / 0,184 |
+| 3–5 | actual / con amigos | 135 | 0,084 / 0,127 | 0,142 / 0,200 | 0,683 / 0,751 | 0,390 / 0,266 |
+| más de 5 | actual / con amigos | 297 | 0,092 / 0,158 | 0,125 / 0,209 | 0,694 / 0,773 | 0,410 / 0,358 |
+
+**Conclusión: la hipótesis se sostiene.** Con β = 0,5, P@10 pasa de 0,084 a 0,134 (+0,050, un 60 %
+más) y R@10 de 0,125 a 0,190. El intervalo bootstrap pareado del 95 % de la diferencia de P@10 es
+[+0,042; +0,058] y no incluye 0.
+
+Discusión:
+
+- **La mejora crece con el número de amigos:** +0,018 con 1–2 amigos, +0,043 con 3–5 y +0,066 con
+  más de 5. Con pocos amigos, la señal social es escasa y ruidosa.
+- **Homofilia frente a influencia.** En promedio, el 45,6 % de los artistas ocultos de un usuario está
+  en el perfil de algún amigo: la red de amistad de Last.fm es muy homofílica. HetRec es observacional,
+  así que no se puede saber si los amigos se parecen porque se eligieron así (homofilia) o porque se
+  influyeron (influencia). Para recomendar basta con la correlación, pero no permite afirmar que
+  escuchar a los amigos *cause* nada.
+- **Coste:** las recomendaciones son más populares (novedad de 0,689 a 0,765), porque lo que
+  comparten los amigos suele ser lo más conocido. En cambio, la lista es más variada (ILS de 0,395 a
+  0,298): los amigos abren direcciones que el perfil propio no tenía.
+- **R7 no aporta precisión:** se dispara en alrededor del 10 % de los usuarios (15 de una muestra de
+  150), y quitarla deja la precisión igual o apenas mejor (0,135 frente a 0,134). Su valor es
+  explicativo: dice qué género nuevo se exploró gracias a los amigos.
+- **Validez:** β se eligió solo en validación y la diferencia se mide en prueba con los mismos
+  usuarios, el mismo split y la misma semilla que el protocolo base. Los artistas ocultos del usuario
+  nunca son semillas propias. A sus amigos no se les quita nada, como pide el protocolo; es justamente
+  la información que se pone a prueba. Como β = 0,5 sale de validación, ese valor queda en
+  `reports/parametros_calibrados.json` y la app lo usa por defecto (el contrato mantiene 0,25 como
+  valor por defecto cuando no hay calibración).
 
 ## Calidad
 
@@ -457,11 +512,18 @@ demostración (`ingest --fixture`):
   académico; en producción haría falta una cuenta con inicio de sesión y amistades con aceptación
   mutua (hoy agregar a alguien lo agrega en ambos sentidos).
 
-- **Ingesta real pendiente:** sin API key de Last.fm, la app y la evaluación se demostraron con el
-  catálogo sintético. El código de ingesta está probado con respuestas simuladas.
+- **Catálogo sesgado hacia HetRec:** la ingesta se sembró con los 1.000 artistas más escuchados de
+  HetRec para poder evaluar con sus usuarios. Eso favorece a los artistas que esos usuarios
+  escuchaban hacia 2011.
+- **Usuarios mainstream:** R4 se dispara en casi el 90 % de las consultas de evaluación. Los
+  resultados describen sobre todo a oyentes de música popular; R3 (nicho) no se pudo evaluar con
+  estos datos.
 - **Mapeo difuso:** con palabras cortas, `fuzz.ratio` ≥ 90 se equivoca a menudo (en la muestra
   revisada, 23 de 62 difusos, por ejemplo "canada" → "cantata"). Los errores se bloquean en
-  `data/mapeo_manual.csv`; con un catálogo nuevo hay que repetir la revisión de la muestra.
+  `data/mapeo_manual.csv`; con un catálogo nuevo hay que repetir la revisión de la muestra. En la
+  muestra del catálogo real (`reports/mapeo_muestra_catalogo.csv`, 50 mapeos difusos) hubo 13
+  errores, por ejemplo "raggae" → ragga o "romania" → música romaní. Ya están bloqueados, pero la
+  evaluación se hizo antes de bloquearlos: afectan a 13 de 1.359 mapeos.
 - **Sesgos de las fuentes:** las etiquetas de Last.fm y la jerarquía de Wikidata son colaborativas
   e incompletas.
 - **Importar el perfil desde Spotify** (opcional): leer los artistas más escuchados con OAuth para

@@ -317,11 +317,18 @@ def discusion(res: ResultadoSocial) -> list[str]:
             "mejora: el grafo de similitud ya llega a esos artistas desde el perfil propio, así "
             "que la señal de los amigos resulta redundante."
         )
-    lineas.append(
+    dispersion = (
         f"- **Dispersión del grafo social.** Mediana de {res.amigos_activos_mediana:.0f} amigos "
-        f"activos por usuario de prueba; {res.sin_amigos_activos} no tienen ninguno con artistas "
-        "en el catálogo, y para ellos β no cambia nada, lo que acerca la diferencia media a 0."
+        "activos (con artistas en el catálogo) por usuario de prueba"
     )
+    if res.sin_amigos_activos:
+        dispersion += (
+            f"; {res.sin_amigos_activos} no tienen ninguno, y para ellos β no cambia nada, lo que "
+            "acerca la diferencia media a 0."
+        )
+    else:
+        dispersion += "; todos tienen al menos uno, así que β actúa sobre cada usuario."
+    lineas.append(dispersion)
     return lineas
 
 
